@@ -31,10 +31,13 @@ df <- sdf.sep %>% collect()
 sdf.old.buckets <- ft_quantile_discretizer(sdf.old, "CoreApps_Word_UsageDays", "Bin", num_buckets = 10L)
 head(sdf.old.buckets)
 
+#create numeric buckets for numeric data and sub out min value of
+# bucket 1 with -Inf and max value of max bucket with Inf
 
-start <- Sys.time()
+Sys.time()
 sdf.buckets <- ft_quantile_discretizer(sdf.old, "CoreApps_Word_UsageDays", "Bin", num_buckets = 10L) %>%
-  group_by(Bin) %>%
+  mutate(Feature = "CoreApps_Word_UsageDays") %>%
+  group_by(Feature, Bin) %>%
   summarise(count = n(),
             minValue = min(CoreApps_Word_UsageDays),
             maxValue = max(CoreApps_Word_UsageDays)) %>%
@@ -61,6 +64,7 @@ get_feture_distributin <- function(sdf, feature) {
 
 }
 
+get_feture_distributin <- function(sdf, feature) {
   #If only 3 columns are specified, create a default aggregate
   if (ncol(df) == 3) {
     df <- df %>% dplyr::mutate(Aggregation = "None")
