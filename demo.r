@@ -20,17 +20,33 @@ sc <- spark_connect(method = "databricks")
 
 createOrReplaceTempView(as.DataFrame(DataScience::demo), "sdf_demo")
 
+sdf.old <- tbl(sc, "tbl_engagedusers_2018_07_31") %>% select(CoreApps_Word_UsageDays)
 sdf.old <- tbl(sc, "tbl_engagedusers_2018_08_31") %>% select(CoreApps_Word_UsageDays)
-sdf.old <- sdf %>% filter(SnapshotDate == "9/30/2018")
-sdf.new <- sdf %>% filter(SnapshotDate == "10/31/2018")
 
 sdf.sep <- sdf.sep %>% group_by(Week1Usage) %>% summarise(Subs = n_distinct(EntityId)) %>% arrange(Week1Usage)
 df <- sdf.sep %>% collect()
 sdf.sep
 df <- sdf.sep %>% collect()
 
-sdf.sep <- ft_quantile_discretizer(sdf.old, "Week1Usage", "Week1Usage_Bin", num_buckets = 10L)
+sdf.old.buckets <- ft_quantile_discretizer(sdf.old, "CoreApps_Word_UsageDays", "Bin", num_buckets = 10L)
+head(sdf.old.buckets)
+
+
+start <- Sys.time()
+sdf.buckets <- ft_quantile_discretizer(sdf.old, "CoreApps_Word_UsageDays", "Bin", num_buckets = 10L) %>%
+  group_by(Bin) %>%
+  summarise(count = n(),
+            minValue = min(CoreApps_Word_UsageDays),
+            maxValue = max(CoreApps_Word_UsageDays)) %>%
+  mutate(minValue = ifelse(Bin == min(Bin), -Inf, minValue),
+         maxValue = ifelse(Bin == max(Bin), Inf, maxValue)) %>%
+  arrange(Bin) %>%
+  collect()
+Sys.time() - start
+
+df.buckets <- sdf.buckets %>% collect()
 #Need to
+#
 # 1) get data type of data.... numeric or chr
 # 2) bin chr data as normal is.character()
 # 3) bin numeric via leah's process is.numeric()
