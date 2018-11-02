@@ -34,13 +34,56 @@ head(sdf.old.buckets)
 #create numeric buckets for numeric data and sub out min value of
 # bucket 1 with -Inf and max value of max bucket with Inf
 
-Sys.time()
+start <- Sys.time()
+
+tbl_cache(sc, "tbl_engagedusers_2018_07_31")
+
 features <- c("CoreApps_Word_UsageDays", "CoreApps_Excel_UsageDays")
-sdf.buckets <- ft_quantile_discretizer(sdf.old,
-                                       input_cols = features,
-                                       output_cols = get_output_cols(features),
-                                       num_buckets = 10L,
-                                       handle_invalid = "keep") %>%
+
+x <- tbl(sc, "tbl_engagedusers_2018_07_31")
+
+sdf.buckets <- tbl(sc, "tbl_engagedusers_2018_07_31") %>%
+  select(one_of(features)) %>%
+  ft_quantile_discretizer(input_cols = features,
+                          output_cols = get_output_cols(features),
+                          num_buckets = 10L,
+                           handle_invalid = "keep")
+
+sdf.bins <- sdf.buckets %>%
+  select(contains("Bins"))
+
+gather_columns <- tbl_vars(sdf.bins)
+
+sdf.bins <- sdf.bins %>%
+  sdf_gather(gather_columns) %>%
+  distinct(feature, value) %>%
+  arrange(feature, value) %>%
+  mutate(feature = substring(feature, 1, nchar(feature)-5))
+
+sdf.values <- sdf.buckets %>%
+  select(-contains("Bins"))
+
+value_columns <- tbl_vars(sdf.values)
+
+sdf.values <- sdf.values %>%
+  sdf_gather(value_columns) %>%
+  group_by(feature) %>%
+  summarise(Distribution = n(),
+            minValue = min(CoreApps_Word_UsageDays),
+            maxValue = max(CoreApps_Word_UsageDays)) %>%
+  arrange(feature, value)
+
+Sys.time() - start
+
+df.bins <- sdf.buckets %>%
+  select(contains("Bins")) %>%
+  sdf_gather(bin_cols) %>%
+  rename(feature = key) %>%
+  distinct(feature, value) %>%
+  arrange(feature, value) %>%
+  collect()
+
+
   mutate(Feature = "CoreApps_Word_UsageDays") %>%
   group_by(Feature, Bin) %>%
   summarise(Distribution = n(),
@@ -56,19 +99,38 @@ Sys.time() - start
 
 df.buckets <- sdf.buckets %>% collect()
 
-gather_columns <- tbl_vars(sdf.buckets)[grepl("_Bins", tbl_vars(sdf.buckets))]
+bin_cols <- tbl_vars(sdf.buckets)[grepl("_Bins", tbl_vars(sdf.buckets))]
+value_cols <- tbl_vars(sdf.buckets)[grepl("_Bins", tbl_vars(sdf.buckets))]
 
 tbl_cache(sc, "tbl_engagedusers_2018_07_31")
-sdf.testfunction <- get_feature_bins(tbl(sc, "tbl_engagedusers_2018_07_31"), "CoreApps_Word_UsageDays")
 
 start <- Sys.time()
-df.bins <- sdf.buckets %>%
-  select(contains("Bins")) %>%
+sdf.bins <- sdf.buckets %>%
+  select(contains("Bins"))
+
+gather_columns <- tbl_vars(sdf.bins)
+
+df.bins <- sdf.bins %>%
   sdf_gather(gather_columns) %>%
-  group_by(key, value) %>%
-  summarise(Count = n()) %>%
-  collect()
-Sys.time() - start
+  distinct(feature, value) %>%
+  arrange(feature, value) %>%
+  collect() %>%
+  mutate(feature = substr(feature, 1, nchar(feature) - 5))
+
+sdf.bins <- as.DataFrame(df.bins)
+
+sdf.values <- sdf.buckets %>%
+  select(!contains("Bins"))
+
+value_columns <- tbl_vars(sdf.values)
+
+sdf.values %>%
+  sdf_gather(value_cols) %>%
+  distinct(feature, value) %>%
+  arrange(feature, value)
+
+Sys.time()- start()
+
 
 df.bins <- sdf.buckets.gathered %>% sdf_gather(gather_columns) %>% collect()
 #Need to
@@ -78,18 +140,38 @@ df.bins <- sdf.buckets.gathered %>% sdf_gather(gather_columns) %>% collect()
 # 3) bin numeric via leah's process is.numeric()
 # 4) calculate PSI
 
-sdf_gather <- function(tbl, gather_cols){
+sdf.bins <- sdf.buckets %>%
+  sdf_gather(gather_columns, 'feature', 'bin') %>%
+  mutate(feature = substring(feature, 1, nchar(feature)-5)) %>%
+  sdf_gather(value_columns, 'value_feature', 'value') %>%
+  filter(feature == value_feature) %>% #distinct(feature, bin, value)
+  group_by(feature, bin) %>% #summarise(count = n(), minValue = min(value))
+  summarize(minValue = min(value),
+            maxValue = max(value)) %>%
+  mutate(minValue = ifelse(bin == min(bin), -Inf, minValue),
+         maxValue = ifelse(bin == max(bin), Inf, maxValue)) %>%
+  arrange(feature, bin) %>%
+  mutate(minValue = ifelse(is.na(lag(maxValue)), minValue, lag(maxValue)))
+
+df.bins <- sdf.bins %>% collect()
+df.bins <- sdf.bins %>% collect() %>% arrange(feature, bin, value)
+head(x)
+
+df.buckets %>% group_by(CoreApps_Excel_UsageDays_Bins) %>% summarise(minValue = min(CoreApps_Excel_UsageDays))
+
+df.bins <- get_feature_bins(tbl(sc, "tbl_engagedusers_2018_07_31"), features) %>% collect()
+sdf_gather <- function(tbl, gather_cols, key, value){
 
   other_cols <- colnames(tbl)[!colnames(tbl) %in% gather_cols]
 
   lapply(gather_cols, function(col_nm){
     tbl %>%
       select(c(other_cols, col_nm)) %>%
-      mutate(key = col_nm) %>%
-      rename(value = col_nm)
+      mutate(!!key := col_nm) %>%
+      rename(!!value := col_nm)
   }) %>%
-    sdf_bind_rows() %>%
-    select(c(other_cols, 'key', 'value'))
+    sdf_bind_rows()# %>%
+    #select(c(other_cols), c(key,value))
 }
 
 get_output_cols <- function(colnames){
@@ -103,25 +185,33 @@ get_output_cols <- function(colnames){
   return(output_cols)
 }
 
-get_feature_bins <- function(sdf, feature_name) {
+get_feature_bins <- function(sdf, features) {
 
-  #feature_name <- tbl_vars(sdf)[1]
+  output_cols <- vector()
 
-  sdf.temp <- sdf %>%
-    rename(Value = 1) %>%
-    mutate(Feature = feature_name)
+  for (col in 1:length(features)){
+    output_cols[col] <- paste(features[col], "_Bins", sep = "")
+  }
 
-  sdf.temp <- ft_quantile_discretizer(sdf.temp, "Value", "Bin", num_buckets = 10L, handle_invalid = "keep") %>% #create 10 buckets
-    group_by(Feature, Bin) %>%
-    summarise(Distribution = n(),
-              minValue = min(Value),     # Get minimum value
-              maxValue = max(Value)) %>%
-    mutate(Distribution_Pct = sum(Distribution),
-           minValue = ifelse(Bin == min(Bin), -Inf, minValue),
-           maxValue = ifelse(Bin == max(Bin), Inf, maxValue)) %>%
-    arrange(Bin) %>%
-    mutate(minValue = ifelse(is.na(lag(maxValue)), minValue, lag(maxValue))) %>%
-    select(Feature, Bin, Distribution, Distribution_Pct, minValue, maxValue)
+  sdf.bins <- sdf %>%
+    select(one_of(features)) %>%
+    ft_quantile_discretizer(input_cols = features,
+                            output_cols = output_cols,
+                            num_buckets = 10L,
+                            handle_invalid = "keep") %>%
+    sdf_gather(gather_columns, 'feature', 'bin') %>%
+    mutate(feature = substring(feature, 1, nchar(feature)-5)) %>%
+    sdf_gather(value_columns, 'value_feature', 'value') %>%
+    filter(feature == value_feature) %>%
+    group_by(feature, bin) %>%
+    summarize(minValue = min(value, na.rm = TRUE),
+              maxValue = max(value, na.rm = TRUE)) %>%
+    mutate(minValue = ifelse(bin == min(bin, na.rm = TRUE), -Inf, minValue),
+           maxValue = ifelse(bin == max(bin, na.rm = TRUE), Inf, maxValue)) %>%
+    arrange(feature, bin) %>%
+    mutate(minValue = ifelse(is.na(lag(maxValue)), minValue, lag(maxValue)))
+
+  return(sdf.bins)
 
 }
 
