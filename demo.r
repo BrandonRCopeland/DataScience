@@ -18,23 +18,63 @@ sparkR.session()
 # Connect the spark session to databricks
 sc <- spark_connect(method = "databricks")
 
-tbl_cache(sc, "tbl_engagedusers_2018_07_31")
+start <- Sys.time()
+
+sdf.old <- tbl(sc, "tbl_engagedusers_2018_07_31") %>% sample_n(100000)
+sdf.new <- tbl(sc, "tbl_engagedusers_2018_08_31") %>% sample_n(100000)
+
+psi
+
+sdf_register(sdf.old, "user_sample_old")
+sdf_register(sdf.new, "user_sample_new")
 
 features <- c("CoreApps_Word_UsageDays", "CoreApps_Excel_UsageDays")
 
-continuousFeatures <- tbl_vars(tbl(sc, "tbl_engagedusers_2018_07_31") %>% select_if(is.numeric))
-categoricalFeatures <- tbl_vars(tbl(sc, "tbl_engagedusers_2018_07_31") %>% select_if(is.character))
-
-sdf.data <- tbl(sc, "tbl_engagedusers_2018_07_31") %>%
+sdf.data.old <- tbl(sc, "user_sample_old") %>%
   select(one_of(features))
 
-sdf.bins <- get_feature_bins(sdf.data, features)
+sdf.data.new <- tbl(sc, "user_sample_new") %>%
+  select(one_of(features))
 
-sdf.data <-sdf.data
+sdf.bins <- get_feature_bins(sdf.data.old, features)
+
+sdf.data.old <- sdf.data.old %>%
   sdf_gather(features, key = "feature", value = "value")
 
-sdf.distribution <- inner_join(sdf.data, sdf.bins, by = c("feature"), suffix = c(".left", ".right"))
+sdf.data.new <- sdf.data.new %>%
+  sdf_gather(features, key = "feature", value = "value")
 
+sdf.distribution.old <- inner_join(sdf.data.old, sdf.bins, by = c("feature")) %>%
+  filter(value > minValue & value <= maxValue) %>%
+  group_by(feature, bin) %>%
+  summarise(Expected = n()) %>%
+  mutate(Expected_pct = Expected / sum(Expected, na.rm = TRUE)) %>%
+  arrange(feature, bin)
+
+sdf.distribution.new <- inner_join(sdf.data.new, sdf.bins, by = c("feature")) %>%
+  filter(value > minValue & value <= maxValue) %>%
+  group_by(feature, bin) %>%
+  summarise(Actual = n()) %>%
+  mutate(Actual_pct = Actual / sum(Actual, na.rm = TRUE)) %>%
+  arrange(feature, bin)
+
+sdf.distribution <- left_join(sdf.bins,
+                              sdf.distribution.old,
+                              by = c("feature", "bin"))
+
+sdf.distribution <- left_join(sdf.distribution,
+                              sdf.distribution.new,
+                              by = c("feature", "bin")) %>%
+  mutate(Index = (Actual_pct - Expected_pct) * log(Actual_pct / Expected_pct)) %>%
+  arrange(feature, bin)
+
+
+df.distribution <- sdf.distribution %>% collect()
+df.distribution
+Sys.time() - start
+
+########################################################################
+# Functions
 ########################################################################
 
 sdf_gather <- function(tbl, gather_cols, key, value){
@@ -84,62 +124,56 @@ get_feature_bins <- function(sdf, features) {
     summarize(minValue = min(value, na.rm = TRUE),
               maxValue = max(value, na.rm = TRUE)) %>%
     mutate(minValue = ifelse(bin == min(bin, na.rm = TRUE), -Inf, minValue),
-           maxValue = ifelse(bin == max(bin, na.rm = TRUE), Inf, maxValue)) %>%
+           maxValue = as.numeric(ifelse(bin == max(bin, na.rm = TRUE), Inf, maxValue))) %>%
     arrange(feature, bin) %>%
-    mutate(minValue = ifelse(is.na(lag(maxValue)), minValue, lag(maxValue))) %>%
-    select(feature, bin, Distribution, Distribution_Pct, minValue, maxValue)
+    mutate(minValue = as.numeric(ifelse(is.na(lag(maxValue)), minValue, lag(maxValue)))) %>%
+    select(feature, bin, minValue, maxValue)
 
   return(sdf.temp)
 
 }
 
+#Only handles numeric features as of current
+get_feature_distribution <- function(sdf.old, sdf.new, features){
 
-get_feture_distributin <- function(sdf, feature) {
-  #If only 3 columns are specified, create a default aggregate
-  if (ncol(df) == 3) {
-    df <- df %>% dplyr::mutate(Aggregation = "None")
-    #If 4 columns are provided, change the aggregation column name to "Aggregation"
-  } else if (ncol(df) == 4) {
-    df <- df %>% dplyr::rename_(Aggregation = names(.)[3])
-  }
+  sdf.data.old <- tbl(sc, "user_sample_old") %>%
+    select(one_of(features))
 
-  ## Grab all of the old features
-  df.features.old <- df %>%
-    dplyr::filter(!grepl("_New", Feature)) %>%
-    dplyr::filter(Feature == feature)
+  sdf.data.new <- tbl(sc, "user_sample_new") %>%
+    select(one_of(features))
 
-  ## Grab all of the new features
-  df.features.new <- df %>%
-    dplyr::filter(grepl("_New", Feature)) %>%
-    dplyr::filter(Feature == paste(feature, "_New", sep = ""))
+  sdf.bins <- get_feature_bins(sdf.data.old, features)
 
-  ## Full join old and new features.  df.old and df.new only contain one feature
-  ## each so we only need to join on value and the specified aggregation
-  df.distribution <- dplyr::full_join(df.features.old,
-                                      df.features.new,
-                                      by = c("Value", "Aggregation"),
-                                      suffix = c(".old", ".new")) %>%
-    dplyr::group_by(Feature.old,
-                    Aggregation) %>%
-    dplyr::mutate(expected = ifelse(is.na(Subscriptions.old), 0, Subscriptions.old),
-                  actual = ifelse(is.na(Subscriptions.new), 0, Subscriptions.new),
-                  expected_pct = (expected / sum(expected)),
-                  actual_pct = (actual / sum(actual)),
-                  Index = (actual_pct - expected_pct) * log(actual_pct / expected_pct)) %>%
-    dplyr::select(Feature.old,
-                  Aggregation,
-                  Value,
-                  expected,
-                  actual,
-                  expected_pct,
-                  actual_pct,
-                  Index) %>%
-    dplyr::rename(Feature = Feature.old) %>%
-    dplyr::arrange(Aggregation,
-                   Value)
+  sdf.data.old <- sdf.data.old %>%
+    sdf_gather(features, key = "feature", value = "value")
 
-  ## we want to be able to get the distribution table before calculating PSI in
-  ## case we need to debug or investigate
-  return(df.distribution)
+  sdf.data.new <- sdf.data.new %>%
+    sdf_gather(features, key = "feature", value = "value")
 
+  sdf.distribution.old <- inner_join(sdf.data.old, sdf.bins, by = c("feature")) %>%
+    filter(value > minValue & value <= maxValue) %>%
+    group_by(feature, bin) %>%
+    summarise(Expected = n()) %>%
+    mutate(Expected_pct = Expected / sum(Expected, na.rm = TRUE)) %>%
+    arrange(feature, bin)
+
+  sdf.distribution.new <- inner_join(sdf.data.new, sdf.bins, by = c("feature")) %>%
+    filter(value > minValue & value <= maxValue) %>%
+    group_by(feature, bin) %>%
+    summarise(Actual = n()) %>%
+    mutate(Actual_pct = Actual / sum(Actual, na.rm = TRUE)) %>%
+    arrange(feature, bin)
+
+  sdf.distribution <- left_join(sdf.bins,
+                                sdf.distribution.old,
+                                by = c("feature", "bin"))
+
+  sdf.distribution <- left_join(sdf.distribution,
+                                sdf.distribution.new,
+                                by = c("feature", "bin")) %>%
+    mutate(Index = (Actual_pct - Expected_pct) * log(Actual_pct / Expected_pct)) %>%
+    arrange(feature, bin)
+
+  return(sdf.distribution)
 }
+
