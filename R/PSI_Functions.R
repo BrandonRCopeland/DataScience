@@ -14,7 +14,6 @@
 #   Test Package:              'Ctrl + Shift + T'
 
 #' Create distribution for a single feature
-#' @export
 get_feature_distribution <- function(df, feature) {
 
   #If only 3 columns are specified, create a default aggregate
@@ -67,7 +66,6 @@ get_feature_distribution <- function(df, feature) {
 }
 
 #' Uniond distributions of multiple features
-#' @export
 get_feature_distributions <- function(df, features) {
 
   ## Create the empty dataframe to house our PSI scores
@@ -93,7 +91,7 @@ get_feature_distributions <- function(df, features) {
 }
 
 #' Get PSI Scores
-#' @export
+
 get_psi_scores <- function(df.PSI.distributions) {
 
   df.PSI.scores <- df.PSI.distributions %>%
