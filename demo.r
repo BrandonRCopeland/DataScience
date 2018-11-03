@@ -20,57 +20,17 @@ sc <- spark_connect(method = "databricks")
 
 start <- Sys.time()
 
+features <- c("CoreApps_Word_UsageDays", "CoreApps_Excel_UsageDays")
+
 sdf.old <- tbl(sc, "tbl_engagedusers_2018_07_31") %>% sample_n(100000)
 sdf.new <- tbl(sc, "tbl_engagedusers_2018_08_31") %>% sample_n(100000)
 
-psi
-
-sdf_register(sdf.old, "user_sample_old")
-sdf_register(sdf.new, "user_sample_new")
-
-features <- c("CoreApps_Word_UsageDays", "CoreApps_Excel_UsageDays")
-
-sdf.data.old <- tbl(sc, "user_sample_old") %>%
-  select(one_of(features))
-
-sdf.data.new <- tbl(sc, "user_sample_new") %>%
-  select(one_of(features))
-
-sdf.bins <- get_feature_bins(sdf.data.old, features)
-
-sdf.data.old <- sdf.data.old %>%
-  sdf_gather(features, key = "feature", value = "value")
-
-sdf.data.new <- sdf.data.new %>%
-  sdf_gather(features, key = "feature", value = "value")
-
-sdf.distribution.old <- inner_join(sdf.data.old, sdf.bins, by = c("feature")) %>%
-  filter(value > minValue & value <= maxValue) %>%
-  group_by(feature, bin) %>%
-  summarise(Expected = n()) %>%
-  mutate(Expected_pct = Expected / sum(Expected, na.rm = TRUE)) %>%
-  arrange(feature, bin)
-
-sdf.distribution.new <- inner_join(sdf.data.new, sdf.bins, by = c("feature")) %>%
-  filter(value > minValue & value <= maxValue) %>%
-  group_by(feature, bin) %>%
-  summarise(Actual = n()) %>%
-  mutate(Actual_pct = Actual / sum(Actual, na.rm = TRUE)) %>%
-  arrange(feature, bin)
-
-sdf.distribution <- left_join(sdf.bins,
-                              sdf.distribution.old,
-                              by = c("feature", "bin"))
-
-sdf.distribution <- left_join(sdf.distribution,
-                              sdf.distribution.new,
-                              by = c("feature", "bin")) %>%
-  mutate(Index = (Actual_pct - Expected_pct) * log(Actual_pct / Expected_pct)) %>%
-  arrange(feature, bin)
-
+sdf.distribution <- get_feature_distribution(sdf.old, sdf.new, features)
 
 df.distribution <- sdf.distribution %>% collect()
+
 df.distribution
+
 Sys.time() - start
 
 ########################################################################
@@ -91,17 +51,6 @@ sdf_gather <- function(tbl, gather_cols, key, value){
     select(c(other_cols), c(!!key,!!value))
 }
 
-get_output_cols <- function(colnames){
-
-  output_cols <- vector()
-
-  for (col in 1:length(colnames)){
-     output_cols[col] <- paste(colnames[col], "_Bins", sep = "")
-  }
-
-  return(output_cols)
-}
-
 get_feature_bins <- function(sdf, features) {
 
   output_cols <- vector()
@@ -116,9 +65,9 @@ get_feature_bins <- function(sdf, features) {
                             output_cols = output_cols,
                             num_buckets = 10L,
                             handle_invalid = "keep") %>%
-    sdf_gather(gather_columns, 'feature', 'bin') %>%
+    sdf_gather(output_cols, 'feature', 'bin') %>%
     mutate(feature = substring(feature, 1, nchar(feature)-5)) %>%
-    sdf_gather(value_columns, 'value_feature', 'value') %>%
+    sdf_gather(features, 'value_feature', 'value') %>%
     filter(feature == value_feature) %>%
     group_by(feature, bin) %>%
     summarize(minValue = min(value, na.rm = TRUE),
