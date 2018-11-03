@@ -20,12 +20,24 @@ sc <- spark_connect(method = "databricks")
 
 start <- Sys.time()
 
-features <- c("CoreApps_Word_UsageDays", "CoreApps_Excel_UsageDays")
+features <- c("CoreApps_Word_UsageDays",
+              "CoreApps_Excel_UsageDays",
+              "CoreApps_PowerPoint_UsageDays",
+              "CoreApps_OneNote_UsageDays",
+              "Is_Win32_Word",
+              "TotalInstalls_Desktop",
+              "StdDev_Days")
 
-sdf.old <- tbl(sc, "tbl_engagedusers_2018_07_31") %>% sample_n(100000)
-sdf.new <- tbl(sc, "tbl_engagedusers_2018_08_31") %>% sample_n(100000)
+sdf.old <- tbl(sc, "tbl_engagedusers_2018_07_31") %>% select(one_of(features))
+sdf.new <- tbl(sc, "tbl_engagedusers_2018_08_31") %>% select(one_of(features))
 
-sdf.distribution <- get_feature_distribution(sdf.old, sdf.new, features)
+sdf_register(sdf.old, "features_expected")
+sdf_register(sdf.new, "features_actual")
+
+tbl_cache(sc, "features_expected")
+tbl_cache(sc, "features_actual")
+
+sdf.distribution <- get_feature_distribution(tbl(sc, "features_expected"), tbl(sc, "features_actual"), features)
 
 df.distribution <- sdf.distribution %>% collect()
 
@@ -83,12 +95,12 @@ get_feature_bins <- function(sdf, features) {
 }
 
 #Only handles numeric features as of current
-get_feature_distribution <- function(sdf.old, sdf.new, features){
+get_feature_distribution <- function(old, new, features){
 
-  sdf.data.old <- tbl(sc, "user_sample_old") %>%
+  sdf.data.old <- old %>%
     select(one_of(features))
 
-  sdf.data.new <- tbl(sc, "user_sample_new") %>%
+  sdf.data.new <- new %>%
     select(one_of(features))
 
   sdf.bins <- get_feature_bins(sdf.data.old, features)
