@@ -82,9 +82,10 @@ get_feature_bins <- function(sdf, features, number_of_bins) {
 #' @param sdf_expected A Spark DataFrame containing features with the expected (old) data. 
 #' @param sdf_new A Spark DataFrame containing features from with the actual (new) data. 
 #' @param features A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame
+#' @param bins An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
 #' @return A tbl_Spark containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index
 #' @export
-get_feature_distribution <- function(sdf_expected, sdf_actual, features){
+get_feature_distribution <- function(sdf_expected, sdf_actual, features, bins){
 
     sdf.expected <- sdf_expected %>%
     dplyr::select(one_of(features))
@@ -92,7 +93,7 @@ get_feature_distribution <- function(sdf_expected, sdf_actual, features){
     sdf.actual <- sdf_actual %>%
     dplyr::select(one_of(features))
 
-    sdf.bins <- get_feature_bins(sdf.expected, features)
+    sdf.bins <- get_feature_bins(sdf.expected, features, bins)
 
     sdf.expected <- sdf.expected %>%
     sdf_gather(features, key = "feature", value = "value")
@@ -140,11 +141,12 @@ get_feature_distribution <- function(sdf_expected, sdf_actual, features){
 #' @param sdf_expected A Spark DataFrame containing features with the expected (old) data. 
 #' @param sdf_new A Spark DataFrame containing features from with the actual (new) data. 
 #' @param features A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame
+#' @param bins An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
 #' @return A tbl_Spark containing the feature name and PSI score
 #' @export
-get_psi_score <- function(sdf_expected, sdf_actual, features) {
+get_psi_score <- function(sdf_expected, sdf_actual, features, bins) {
 
-    sdf.feature_distribution <- get_feature_distribution(sdf_expected, sdf_actual)
+    sdf.feature_distribution <- get_feature_distribution(sdf_expected, sdf_actual, features, bins)
 
     sdf.psi_scores <- sdf.feature_distribution %>%
         dplyr::group_by(feature) %>%
