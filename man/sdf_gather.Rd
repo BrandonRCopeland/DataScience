@@ -2,10 +2,22 @@
 % Please edit documentation in R/Sparklyr_PSI_Functions.r
 \name{sdf_gather}
 \alias{sdf_gather}
-\title{Create distribution for a single feature}
+\title{Transform a wide Spark DataFrame to a long Spark Dataframe}
 \usage{
-sdf_gather(tbl, gather_cols, key, value)
+sdf_gather(sdf, gather_cols, key, value)
+}
+\arguments{
+\item{sdf}{A Spark DataFrame in wide format.  This is the table that will be converted from wide to long}
+
+\item{gather_cols}{The columns to be gathered and converted to a categorical variabl}
+
+\item{key}{The name of the column that will contain the names of the gathered columns}
+
+\item{value}{The name of the column that will be created to hold the values of the gathered columns.}
+}
+\value{
+A tbl_Spark in long format
 }
 \description{
-Create distribution for a single feature
+This function replicates the functionality of dplyr::gather in a sparklyr distributed environment.
 }
