@@ -1,9 +1,8 @@
 {
   "ExpandedNodes": [
     "",
-    "\\data",
     "\\man"
   ],
-  "SelectedNode": "\\demo.r",
+  "SelectedNode": "\\man\\get_psi_score.Rd",
   "PreviewInSolutionExplorer": false
 }
