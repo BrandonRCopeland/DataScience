@@ -85,7 +85,21 @@ get_feature_bins <- function(sdf, features, bins) {
 #' @param bins An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
 #' @return A tbl_Spark containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index
 #' @export
-get_feature_distribution <- function(sdf_expected, sdf_actual, features, bins){
+get_feature_distribution <- function(sdf_expected, sdf_actual, features = NULL, bins = NULL){
+
+    df.features()
+
+    if (missing(bins)) {
+        bins = 10L
+    }
+
+    if (missing(features)) {
+        numericFeatures = tbl_vars(sdf_expected %>% select_if(is.numeric))
+        categoricalFeatures = tbl_vars(sdf_expected %>% select_if(is.factor))
+    } else {
+        numericFeatures = tbl_vars(sdf_expected %>% select(one_of(features)) %>% select_if(is.numeric))
+        categoricalFeatues = tbl_vars(sdf_expected %>% select(one_of(features) ))
+    }
 
     sdf.expected <- sdf_expected %>%
     dplyr::select(one_of(features))
