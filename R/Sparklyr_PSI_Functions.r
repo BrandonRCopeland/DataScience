@@ -1,7 +1,7 @@
 #' Transform a wide Spark DataFrame to a long Spark Dataframe
 #'
 #' This function replicates the functionality of dplyr::gather in a sparklyr distributed environment.
-#' 
+#'
 
 #' @param sdf A Spark DataFrame in wide format.  This is the table that will be converted from wide to long
 #' @param gather_cols The columns to be gathered and converted to a categorical variabl
@@ -28,11 +28,11 @@ sdf_gather <- function(sdf, gather_cols, key, value){
 #' This function takes a Spark DataFrame and returns a Spark DataFrame with the designated number
 #' of bins for the features.  Depending on the range and distribution of the numeric feature,
 #' this function may return less than the designated number of bins.
-#' 
+#'
 #' NOTE:  This function currently only supports NUMERIC features.  Categorical and Date features will
 #' be added in the future.
 
-#' @param sdf A Spark DataFrame containing features that need to be binned. 
+#' @param sdf A Spark DataFrame containing features that need to be binned.
 #' @param features A vector of the numeric feature names to be binned
 #' @param bins The number of bins to create in.  Use the L suffix to ensure the value is an integer.
 #' @return A tbl_Spark containing the feature name, bin number, min value, and max value
@@ -75,69 +75,124 @@ get_feature_bins <- function(sdf, features, bins) {
 #' with their expected values.  The other should contain the features with their actual
 #' values.  Example... if we're comparing Oct '18 to Nov '18 features, Oct '18 would be
 #' expected and Nov '18 would be actual.
-#' 
+#'
 #' NOTE: This function currently only supports NUMERIC features.  Categorical and Date features will
 #' be added in the future.
 
-#' @param sdf_expected A Spark DataFrame containing features with the expected (old) data. 
-#' @param sdf_new A Spark DataFrame containing features from with the actual (new) data. 
+#' @param sdf_expected A Spark DataFrame containing features with the expected (old) data.
+#' @param sdf_new A Spark DataFrame containing features from with the actual (new) data.
 #' @param features A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame
 #' @param bins An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
 #' @return A tbl_Spark containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index
 #' @export
 get_feature_distribution <- function(sdf_expected, sdf_actual, features = NULL, bins = NULL){
 
-    df.features()
-
     if (missing(bins)) {
         bins = 10L
     }
 
-    if (missing(features)) {
-        numericFeatures = tbl_vars(sdf_expected %>% select_if(is.numeric))
-        categoricalFeatures = tbl_vars(sdf_expected %>% select_if(is.factor))
+    numericFeatures <- tbl_vars(sdf_expected %>% select_if(function(col) is.numeric(col)))
+    categoricalFeatures <- tbl_vars(sdf_expected %>% select_if(function(col) is.character(col) | is.factor(col)))
+
+    if (length(numericFeatures) > 0) {
+      sdf.expected.numeric <- sdf_expected %>% select(one_of(numericFeatures))
+      sdf.actual.numeric <- sdf_actual %>% select(one_of(numericFeatures))
     } else {
-        numericFeatures = tbl_vars(sdf_expected %>% select(one_of(features)) %>% select_if(is.numeric))
-        categoricalFeatues = tbl_vars(sdf_expected %>% select(one_of(features) ))
+      sdf.expected.numeric <- NULL
+      sdf.actual.numeric <- NULL
     }
 
-    sdf.expected <- sdf_expected %>%
-    dplyr::select(one_of(features))
+    if (length(categoricalFeatures) > 0){
+      sdf.expected.categorical <- sdf_expected %>% select(one_of(categoricalFeatures))
+      sdf.actual.categorical <- sdf_actual %>% select(one_of(categoricalFeatures))
+    } else {
+      sdf.expected.categorical <- NULL
+      sdf.actual.categorical <- NULL
+    }
 
-    sdf.actual <- sdf_actual %>%
-    dplyr::select(one_of(features))
+    if (!is.null(features)){
+      if(length(numericFeatures)> 0) {
+        sdf.expected.numeric <- sdf.expected.numeric %>% select(one_of(features))
+        sdf.actual.numeric <- sdf.actual.numeric %>% select(one_of(features))
+      }
+      if(length(categoricalFeatures) > 0){
+        sdf.expected.categorical <- sdf.expected.categorical %>% select(one_of(features))
+        sdf.actual.categorical <- sdf.actual.categorical %>% select(one_of(features))
+      }
+    }
 
-    sdf.bins <- get_feature_bins(sdf.expected, features, bins)
+    if(length(numericFeatures) > 0) {
 
-    sdf.expected <- sdf.expected %>%
-    sdf_gather(features, key = "feature", value = "value")
+      sdf.bins <- get_feature_bins(sdf.expected, numericFeatures, bins)
 
-    sdf.actual <- sdf.actual %>%
-    sdf_gather(features, key = "feature", value = "value")
+      sdf.expected.numeric <- sdf.expected.numeric %>%
+        sdf_gather(numericFeatures, key = "feature", value = "value")
 
-    sdf.distribution.expected <- dplyr::inner_join(sdf.expected, sdf.bins, by = c("feature")) %>%
-    dplyr::filter(value > minValue & value <= maxValue) %>%
-    dplyr::group_by(feature, bin) %>%
-    dplyr::summarise(Expected = n()) %>%
-    dplyr::mutate(Expected_pct = Expected / sum(Expected, na.rm = TRUE)) %>%
-    dplyr::arrange(feature, bin)
+      sdf.actual.numeric <- sdf.actual.numeric %>%
+        sdf_gather(numericFeatures, key = "feature", value = "value")
 
-    sdf.distribution.actual <- dplyr::inner_join(sdf.actual, sdf.bins, by = c("feature")) %>%
-    dplyr::filter(value > minValue & value <= maxValue) %>%
-    dplyr::group_by(feature, bin) %>%
-    dplyr::summarise(Actual = n()) %>%
-    dplyr::mutate(Actual_pct = Actual / sum(Actual, na.rm = TRUE)) %>%
-    dplyr::arrange(feature, bin)
+      sdf.distribution.expected.numeric <- dplyr::inner_join(sdf.expected.numeric,
+                                                             sdf.bins,
+                                                             by = c("feature")) %>%
+        dplyr::filter(value > minValue & value <= maxValue) %>%
+        dplyr::group_by(feature, bin) %>%
+        dplyr::summarise(Expected = n()) %>%
+        dplyr::mutate(Expected_pct = Expected / sum(Expected, na.rm = TRUE)) %>%
+        dplyr::arrange(feature, bin)
 
-    sdf.distribution <- dplyr::left_join(sdf.bins,
-                               sdf.distribution.expected,
-                               by = c("feature", "bin"))
+      sdf.distribution.actual.numeric <- dplyr::inner_join(sdf.actual.numeric,
+                                                           sdf.bins,
+                                                           by = c("feature")) %>%
+        dplyr::filter(value > minValue & value <= maxValue) %>%
+        dplyr::group_by(feature, bin) %>%
+        dplyr::summarise(Actual = n()) %>%
+        dplyr::mutate(Actual_pct = Actual / sum(Actual, na.rm = TRUE)) %>%
+        dplyr::arrange(feature, bin)
 
-    sdf.distribution <- dplyr::left_join(sdf.distribution,
-                               sdf.distribution.actual,
-                               by = c("feature", "bin")) %>%
-    dplyr::mutate(Index = (Actual_pct - Expected_pct) * log(Actual_pct / Expected_pct)) %>%
-    dplyr::arrange(feature, bin)
+      sdf.distribution.numeric <- dplyr::left_join(sdf.bins,
+                                                   sdf.distribution.expected.numeric,
+                                                   by = c("feature", "bin"))
+
+      sdf.distribution.numeric <- dplyr::left_join(sdf.distribution.numeric,
+                                                   sdf.distribution.actual.numeric,
+                                                   by = c("feature", "bin")) %>%
+        dplyr::mutate(Index = (Actual_pct - Expected_pct) * log(Actual_pct / Expected_pct)) %>%
+        dplyr::arrange(feature, bin)
+    }
+
+    if(length(categorical) > 0) {
+
+
+      sdf.expected.categorical <- sdf.expected.categorical %>%
+        sdf_gather(categoricalFeatures, key = "feature", value = "value")
+
+      sdf.actual.categorical <- sdf.actual.categorical %>%
+        sdf_gather(categoricalFeatures, key = "feature", value = "value")
+
+      sdf.distribution.expected.categorical <- sdf.expected.categorical %>%
+        dplyr::group_by(feature, value) %>%
+        dplyr::summarise(Expected = n()) %>%
+        dplyr::mutate(Expected_pct = Expected / sum(Expected, na.rm = TRUE)) %>%
+        dplyr::arrange(feature)
+
+      sdf.distribution.actual.categorical <- sdf.actual.categorical %>%
+        dplyr::group_by(feature, value) %>%
+        dplyr::summarise(Actual = n()) %>%
+        dplyr::mutate(Actual_pct = Actual / sum(Actual, na.rm = TRUE)) %>%
+        dplyr::arrange(feature)
+
+      sdf.distribution.categorical <- dplyr::full_join(sdf.distribution.expected.categorical,
+                                                       sdf.distribution.actual.categorical,
+                                                       by = c("feature", "value")) %>%
+        dplyr::mutate(Index = (Actual_pct - Expected_pct) * log(Actual_pct / Expected_pct),
+                      bin = value,
+                      minValue = NaN,
+                      maxValue = NaN) %>%
+        dplyr::select(feature, bin, minValue, maxValue, Expected, Expected_pct, Actual, Actual_pct, Index) %>%
+        dplyr::arrange(feature, bin)
+    }
+
+    sdf.distribution <- sdf_bind_rows(sdf.distribution.numeric, sdf.distribution.categorical)
 
   return(sdf.distribution)
 }
@@ -148,12 +203,12 @@ get_feature_distribution <- function(sdf_expected, sdf_actual, features = NULL, 
 #' with their expected values.  The other should contain the features with their actual
 #' values.  Example... if we're comparing Oct '18 to Nov '18 features, Oct '18 would be
 #' expected and Nov '18 would be actual.
-#' 
+#'
 #' NOTE: This function currently only supports NUMERIC features.  Categorical and Date features will
 #' be added in the future.
 
-#' @param sdf_expected A Spark DataFrame containing features with the expected (old) data. 
-#' @param sdf_new A Spark DataFrame containing features from with the actual (new) data. 
+#' @param sdf_expected A Spark DataFrame containing features with the expected (old) data.
+#' @param sdf_new A Spark DataFrame containing features from with the actual (new) data.
 #' @param features A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame
 #' @param bins An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
 #' @return A tbl_Spark containing the feature name and PSI score
