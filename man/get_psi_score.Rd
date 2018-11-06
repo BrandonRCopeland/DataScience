@@ -4,12 +4,14 @@
 \alias{get_psi_score}
 \title{Calculate the feature-level PSI index for the specified numeric features}
 \usage{
-get_psi_score(sdf_expected, sdf_actual, features)
+get_psi_score(sdf_expected, sdf_actual, features, bins)
 }
 \arguments{
 \item{sdf_expected}{A Spark DataFrame containing features with the expected (old) data.}
 
 \item{features}{A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame}
+
+\item{bins}{An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution}
 
 \item{sdf_new}{A Spark DataFrame containing features from with the actual (new) data.}
 }

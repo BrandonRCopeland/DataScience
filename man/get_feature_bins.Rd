@@ -4,14 +4,14 @@
 \alias{get_feature_bins}
 \title{Create bins for numeric features}
 \usage{
-get_feature_bins(sdf, features, number_of_bins)
+get_feature_bins(sdf, features, bins)
 }
 \arguments{
 \item{sdf}{A Spark DataFrame containing features that need to be binned.}
 
 \item{features}{A vector of the numeric feature names to be binned}
 
-\item{number_of_bins}{The number of bins to create in.  Use the L suffix to ensure the value is an integer.}
+\item{bins}{The number of bins to create in.  Use the L suffix to ensure the value is an integer.}
 }
 \value{
 A tbl_Spark containing the feature name, bin number, min value, and max value

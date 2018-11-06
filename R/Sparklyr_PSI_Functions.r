@@ -34,10 +34,10 @@ sdf_gather <- function(sdf, gather_cols, key, value){
 
 #' @param sdf A Spark DataFrame containing features that need to be binned. 
 #' @param features A vector of the numeric feature names to be binned
-#' @param number_of_bins The number of bins to create in.  Use the L suffix to ensure the value is an integer.
+#' @param bins The number of bins to create in.  Use the L suffix to ensure the value is an integer.
 #' @return A tbl_Spark containing the feature name, bin number, min value, and max value
 #' @export
-get_feature_bins <- function(sdf, features, number_of_bins) {
+get_feature_bins <- function(sdf, features, bins) {
 
   output_cols <- vector()
 
@@ -49,7 +49,7 @@ get_feature_bins <- function(sdf, features, number_of_bins) {
     dplyr::select(one_of(features)) %>%
     sparklyr::ft_quantile_discretizer(input_cols = features,
                                       output_cols = output_cols,
-                                      num_buckets = number_of_bins,
+                                      num_buckets = bins,
                                       handle_invalid = "keep") %>%
     sdf_gather(output_cols, 'feature', 'bin') %>%
     dplyr::mutate(feature = substring(feature, 1, nchar(feature)-5)) %>%
@@ -150,7 +150,7 @@ get_psi_score <- function(sdf_expected, sdf_actual, features, bins) {
 
     sdf.psi_scores <- sdf.feature_distribution %>%
         dplyr::group_by(feature) %>%
-        dplyr::summarise(PSI = sum(Index)) %>%
+        dplyr::summarise(PSI = sum(Index, na.rm = TRUE)) %>%
         dplyr::arrange(feature)
 
     return(sdf.psi_scores)
