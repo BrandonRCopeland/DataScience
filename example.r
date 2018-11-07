@@ -3,7 +3,7 @@ library(sparklyr)
 library(dplyr)
 library(DataScience)
 
-# Get Spark set up
+# Get Spark set up.
 sparkR.session()
 sc <- spark_connect(method = "databricks")
 
