@@ -36,7 +36,6 @@ sdf_gather <- function(sdf, gather_cols, key, value){
 #' @param features A vector of the numeric feature names to be binned
 #' @param bins The number of bins to create in.  Use the L suffix to ensure the value is an integer.
 #' @return A tbl_Spark containing the feature name, bin number, min value, and max value
-#' @export
 get_feature_bins <- function(sdf, features, bins) {
 
   output_cols <- vector()
@@ -79,10 +78,10 @@ get_feature_bins <- function(sdf, features, bins) {
 #' NOTE: This function currently only supports NUMERIC features.  Categorical and Date features will
 #' be added in the future.
 
-#' @param sdf_expected A Spark DataFrame containing features with the expected (old) data.
-#' @param sdf_new A Spark DataFrame containing features from with the actual (new) data.
-#' @param features A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame
-#' @param bins An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
+#' @param sdf_expected Required: A Spark DataFrame containing features with the expected (old) data.
+#' @param sdf_new Required: A Spark DataFrame containing features from with the actual (new) data.
+#' @param features Optional: A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame
+#' @param bins Optional: An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
 #' @return A tbl_Spark containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index
 #' @export
 get_feature_distribution <- function(sdf_expected, sdf_actual, features = NULL, bins = NULL){
@@ -160,7 +159,7 @@ get_feature_distribution <- function(sdf_expected, sdf_actual, features = NULL, 
         dplyr::arrange(feature, bin)
     }
 
-    if(length(categorical) > 0) {
+    if(length(categoricalFeatures) > 0) {
 
 
       sdf.expected.categorical <- sdf.expected.categorical %>%
@@ -192,7 +191,13 @@ get_feature_distribution <- function(sdf_expected, sdf_actual, features = NULL, 
         dplyr::arrange(feature, bin)
     }
 
-    sdf.distribution <- sdf_bind_rows(sdf.distribution.numeric, sdf.distribution.categorical)
+    if(length(numericFeatures) > 0 & length(categoricalFeatures) > 0){
+      sdf.distribution <- sdf_bind_rows(sdf.distribution.numeric, sdf.distribution.categorical)
+    } else if (length(numericFeatures) > 0){
+      sdf.distribution <- sdf.distribution.numeric
+    } else if (length(categoricalFeatures) > 0){
+      sdf.distribution <- sdf.distribution.categorical
+    }
 
   return(sdf.distribution)
 }
@@ -207,13 +212,17 @@ get_feature_distribution <- function(sdf_expected, sdf_actual, features = NULL, 
 #' NOTE: This function currently only supports NUMERIC features.  Categorical and Date features will
 #' be added in the future.
 
-#' @param sdf_expected A Spark DataFrame containing features with the expected (old) data.
-#' @param sdf_new A Spark DataFrame containing features from with the actual (new) data.
-#' @param features A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame
-#' @param bins An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
+#' @param sdf_expected Required: A Spark DataFrame containing features with the expected (old) data.
+#' @param sdf_new Required: A Spark DataFrame containing features from with the actual (new) data.
+#' @param features Optional: A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame
+#' @param bins Optional: An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
 #' @return A tbl_Spark containing the feature name and PSI score
 #' @export
-get_psi_score <- function(sdf_expected, sdf_actual, features, bins) {
+get_psi_score <- function(sdf_expected, sdf_actual, features = NULL, bins = NULL) {
+
+    if (is.null(bins)){
+      bins = 10L
+    }
 
     sdf.feature_distribution <- get_feature_distribution(sdf_expected, sdf_actual, features, bins)
 

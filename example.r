@@ -5,26 +5,33 @@ library(DataScience)
 
 # Get Spark set up
 sparkR.session()
-sc <- spark_connect(master = "local", version = "2.3.1")
+sc <- spark_connect(method = "databricks")
 
 # Random demo dataset for examples
 head(demo)
 
 # Add our demo R dataframe to Spark as a Spark DataFrame
-copy_to(sc, demo, "sdf_demo")
+df <- demo
 
+try(db_drop_table(sc, "sdf_demo"))
+copy_to(sc, df, "sdf_demo")
+sdf.demo <- tbl(sc, "sdf_demo")
+
+start <- Sys.time()
 # Create our parameters based off of the demo data.  We'll use the data from
 # September as the expected and October as actual
-sdf.expected <- tbl(sc, "sdf_demo") %>% filter(SnapshotDate == "9/30/2018")
-sdf.actual <- tbl(sc, "sdf_demo") %>% filter(SnapshotDate == "10/31/2018")
-features <- c("Week1Usage", "Week2Usage", "Week3Usage", "Week4Usage")
-bins <- 10L
+sdf.expected <- tbl(sc,"tbl_engagedusers_2018_04_30") %>% mutate(Raw_Score_Weeks = as.numeric(Raw_Score_Weeks)) %>% select(one_of("Subscription_Engagement_Segment", "Raw_Score_Weeks"))
+sdf.actual <- tbl(sc,"tbl_engagedusers_2018_05_31") %>% mutate(Raw_Score_Weeks = as.numeric(Raw_Score_Weeks)) %>% select(one_of("Subscription_Engagement_Segment", "Raw_Score_Weeks"))
 
 # Run each function as an example (except sdf_gather)
-sdf.psi_bins <- get_feature_bins(sdf.expected, features, bins)
-sdf.psi_scores <- get_psi_score(sdf.expected, sdf.actual, features, bins)
-sdf.psi_index_distribution <- get_feature_distribution(sdf.expected, sdf.actual, features, bins)
+df.distribution <- get_feature_distribution(sdf.expected, sdf.actual) %>% collect()
+df.distribution
+Sys.time() - start
 
+start <- Sys.time()
+df.psi <- get_psi_score(sdf.expected, sdf.actual, bins = 10L) %>% collect()
+df.psi
+Sys.time() - start
 # Collect the Spark DataFrames into local R DataFrames since they're much smaller
 df.psi_bins <- sdf.psi_bins %>% collect()
 df.psi_scores <- sdf.psi_scores %>% collect()

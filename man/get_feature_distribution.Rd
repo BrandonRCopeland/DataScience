@@ -4,16 +4,17 @@
 \alias{get_feature_distribution}
 \title{Calculate the bin-level PSI index for the specified numeric features}
 \usage{
-get_feature_distribution(sdf_expected, sdf_actual, features, bins)
+get_feature_distribution(sdf_expected, sdf_actual, features = NULL,
+  bins = NULL)
 }
 \arguments{
-\item{sdf_expected}{A Spark DataFrame containing features with the expected (old) data.}
+\item{sdf_expected}{Required: A Spark DataFrame containing features with the expected (old) data.}
 
-\item{features}{A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame}
+\item{features}{Optional: A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame}
 
-\item{bins}{An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution}
+\item{bins}{Optional: An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution}
 
-\item{sdf_new}{A Spark DataFrame containing features from with the actual (new) data.}
+\item{sdf_new}{Required: A Spark DataFrame containing features from with the actual (new) data.}
 }
 \value{
 A tbl_Spark containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index
