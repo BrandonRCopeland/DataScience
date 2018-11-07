@@ -75,12 +75,11 @@ get_feature_bins <- function(sdf, features, bins) {
 #' values.  Example... if we're comparing Oct '18 to Nov '18 features, Oct '18 would be
 #' expected and Nov '18 would be actual.
 #'
-#' NOTE: This function currently only supports NUMERIC features.  Categorical and Date features will
-#' be added in the future.
-
+#' NOTE: This function currently only supports NUMERIC and/or CHARACTER datatypes
+#'
 #' @param sdf_expected Required: A Spark DataFrame containing features with the expected (old) data.
 #' @param sdf_new Required: A Spark DataFrame containing features from with the actual (new) data.
-#' @param features Optional: A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame
+#' @param features Optional: A vector of the feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_actual and be of the same data type in each data frame.  If not features are provided, all features in sdf_expected will be used.
 #' @param bins Optional: An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
 #' @return A tbl_Spark containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index
 #' @export
@@ -209,14 +208,13 @@ get_feature_distribution <- function(sdf_expected, sdf_actual, features = NULL, 
 #' values.  Example... if we're comparing Oct '18 to Nov '18 features, Oct '18 would be
 #' expected and Nov '18 would be actual.
 #'
-#' NOTE: This function currently only supports NUMERIC features.  Categorical and Date features will
-#' be added in the future.
-
+#' NOTE: This function currently only supports NUMERIC and/or CHARACTER data types.
+#'
 #' @param sdf_expected Required: A Spark DataFrame containing features with the expected (old) data.
 #' @param sdf_new Required: A Spark DataFrame containing features from with the actual (new) data.
-#' @param features Optional: A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame
+#' @param features Optional: A vector of the feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_actual and be of the same data type in each data frame.  If not features are provided, all features in sdf_expected will be used.
 #' @param bins Optional: An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
-#' @return A tbl_Spark containing the feature name and PSI score
+#' @return A tbl_Spark containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index
 #' @export
 get_psi_score <- function(sdf_expected, sdf_actual, features = NULL, bins = NULL) {
 

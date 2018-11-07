@@ -10,7 +10,7 @@ get_feature_distribution(sdf_expected, sdf_actual, features = NULL,
 \arguments{
 \item{sdf_expected}{Required: A Spark DataFrame containing features with the expected (old) data.}
 
-\item{features}{Optional: A vector of the numeric feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_new and the features must be numeric in each DataFrame}
+\item{features}{Optional: A vector of the feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_actual and be of the same data type in each data frame.  If not features are provided, all features in sdf_expected will be used.}
 
 \item{bins}{Optional: An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution}
 
@@ -26,6 +26,5 @@ values.  Example... if we're comparing Oct '18 to Nov '18 features, Oct '18 woul
 expected and Nov '18 would be actual.
 }
 \details{
-NOTE: This function currently only supports NUMERIC features.  Categorical and Date features will
-be added in the future.
+NOTE: This function currently only supports NUMERIC and/or CHARACTER datatypes
 }

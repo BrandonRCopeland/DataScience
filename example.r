@@ -20,8 +20,12 @@ df <- demo
 start <- Sys.time()
 # Create our parameters based off of the demo data.  We'll use the data from
 # September as the expected and October as actual
-sdf.expected <- tbl(sc,"tbl_engagedusers_2018_04_30") %>% mutate(Raw_Score_Weeks = as.numeric(Raw_Score_Weeks)) %>% select("Subscription_Engagement_Segment", "Raw_Score_Weeks")
-sdf.actual <- tbl(sc,"tbl_engagedusers_2018_05_31") %>% mutate(Raw_Score_Weeks = as.numeric(Raw_Score_Weeks)) %>% select("Subscription_Engagement_Segment", "Raw_Score_Weeks")
+sdf.expected <- tbl(sc,"tbl_engagedusers_2018_04_30") %>%
+  mutate(Raw_Score_Weeks = as.numeric(Raw_Score_Weeks)) %>%
+  select("Subscription_Engagement_Segment", "Raw_Score_Weeks")
+sdf.actual <- tbl(sc,"tbl_engagedusers_2018_05_31") %>%
+  mutate(Raw_Score_Weeks = as.numeric(Raw_Score_Weeks)) %>%
+  select("Subscription_Engagement_Segment", "Raw_Score_Weeks")
 
 sdf_register(sdf.expected, "expected")
 sdf_register(sdf.actual, "actual")
