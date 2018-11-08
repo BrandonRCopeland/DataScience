@@ -19,3 +19,6 @@ sparkR.session()
 sc <- spark_connect(method = "databricks")
 
 
+sdf.jul <- tbl(sc, "engaged_users_active") %>% filter(SnapshotDate == "2018-07-31")
+sdf.aug <- tbl(sc, "engaged_users_active") %>% filter(SnapshotDate == "2018-08-31")
+sdf.sep <- tbl(sc, "engaged_users_active") %>% filter(SnapshotDate == "2018-09-30")
