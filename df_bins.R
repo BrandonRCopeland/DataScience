@@ -33,7 +33,7 @@ categorical_feature_dist <- function(df, gather_cols, key = "key", value = "valu
 }
 
 #Made for base R very fast
-bins <- function(df, gather_cols){
+df_bins <- function(df, gather_cols){
 
   df.bins <- lapply(gather_cols, function(col_nm){
     df %>%
@@ -61,5 +61,5 @@ bins <- function(df, gather_cols){
 
 }
 
-df.bins <- bins(df.april, colnames(df.april))
+df.bins <- df_bins(df.april, colnames(df.april))
 df.bins
