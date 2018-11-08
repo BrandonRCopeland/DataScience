@@ -24,7 +24,7 @@ categorical_feature_dist <- function(df, gather_cols, key = "key", value = "valu
       summarise(Distribution = n()) %>%
       mutate(Relative_Distribution = Distribution / sum(Distribution, na.rm = TRUE))
   }) %>%
-    bind_rows() %>%
+    sdf_bind_rows() %>%
     arrange(key, value) %>%
     rename(!!key := key,
            !!value := value)

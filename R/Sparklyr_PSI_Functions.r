@@ -9,7 +9,7 @@
 #' @param value The name of the column that will be created to hold the values of the gathered columns.
 #' @return A tbl_Spark in long format
 #' @export
-sdf_gather <- function(sdf, gather_cols, key, value){
+sdf_gather <- function(sdf, gather_cols, key = "key", value = "value"){
 
     other_cols <- colnames(sdf)[!colnames(sdf) %in% gather_cols]
 
