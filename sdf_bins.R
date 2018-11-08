@@ -1,3 +1,4 @@
+#made for spark.  ran on 283 columns of 200M records in 20 min
 sdf_bins <- function(df, gather_cols){
 
   df.bins <- lapply(gather_cols, function(col_nm){

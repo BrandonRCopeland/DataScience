@@ -32,7 +32,7 @@ categorical_feature_dist <- function(df, gather_cols, key = "key", value = "valu
   return(df.bins)
 }
 
-#as the min and max.
+#Made for base R very fast
 bins <- function(df, gather_cols){
 
   df.bins <- lapply(gather_cols, function(col_nm){
@@ -63,14 +63,3 @@ bins <- function(df, gather_cols){
 
 df.bins <- bins(df.april, colnames(df.april))
 df.bins
-
-df <- categorical_feature_dist(df.april, colnames(df.april))
-dfstart <- Sys.time()
-df <- df %>% collect()
-Sys.time() - start
-df
-sdf.demo
-demo %>%
-  mutate(bin = ntile(Week4Usage, 10)) %>%
-  group_by(bin) %>%
-  summarise(min = min(Week4Usage), max = max(Week4Usage), count = n()) %>% arrange(bin)
