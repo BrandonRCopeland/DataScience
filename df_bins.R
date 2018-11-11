@@ -13,7 +13,7 @@ df.may <- data.table::fread("C:/Users/brcopela/Documents/eu_may_sample.csv")
 
 #if the bins are equaly on the bottom just drop the unique bin and use that
 #as the min and max.
-categorical_feature_dist <- function(df, gather_cols, key = "key", value = "value"){
+df_categorical_feature_dist <- function(df, gather_cols, key = "key", value = "value"){
 
   df.bins <- lapply(gather_cols, function(col_nm){
     df %>%
@@ -24,7 +24,7 @@ categorical_feature_dist <- function(df, gather_cols, key = "key", value = "valu
       summarise(Distribution = n()) %>%
       mutate(Relative_Distribution = Distribution / sum(Distribution, na.rm = TRUE))
   }) %>%
-    sdf_bind_rows() %>%
+    bind_rows() %>%
     arrange(key, value) %>%
     rename(!!key := key,
            !!value := value)
@@ -55,6 +55,7 @@ df_bins <- function(df, gather_cols){
            min = ifelse(bin == min(bin, na.rm = TRUE), -Inf, min),
            max = ifelse(bin == max(bin, na.rm = TRUE), Inf, max)) %>%
     filter(min != max) %>%
+    mutate(bin = row_number()) %>%
     select(variable, bin, min, max)
 
   return(df.bins)

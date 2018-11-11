@@ -1,12 +1,12 @@
 #get mean of all columns in the specifed base R data frame
-df_means <- function(df, features){
+df_means <- function(df){
 
-  sdf.means <- sdf %>%
+  df.means <- df %>%
     select_if(is.numeric) %>%
     summarise_all(mean) %>%
-    sdf_gather(sdf.means, tbl_vars(sdf.means), "Feature", "Average")
+    gather(key = "Feature", value = "Average", )
 
-  return(sdf.means)
+  return(df.means)
 
 }
 
