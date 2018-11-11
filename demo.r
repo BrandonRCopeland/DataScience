@@ -74,9 +74,9 @@ df.matches <- left_join(df.expected.long, df.actual.long,
             Matches = sum(IsMatch, na.rm = TRUE),
             Match_Pct = Matches / Total)
 
-df.validation <- inner_join(df.means, df.matches, by = "Feature")
+df.validation <- left_join(df.matches, df.means, by = "Feature")
 
 #Convert PSI to base R
 
-df.matches
-dfSys.time() - start
+df.validation
+Sys.time() - start
