@@ -4,7 +4,7 @@ df_means <- function(df){
   df.means <- df %>%
     select_if(is.numeric) %>%
     summarise_all(mean) %>%
-    gather(key = "Feature", value = "Average", )
+    gather(key = "Feature", value = "Average")
 
   return(df.means)
 
