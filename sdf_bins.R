@@ -18,10 +18,10 @@ sdf_categorical_feature_dist <- function(df, gather_cols, key = "key", value = "
 }
 
 #made for spark.  ran on 283 columns of 200M records in 20 min
-sdf_bins <- function(df, gather_cols){
+sdf_bins <- function(sdf, gather_cols){
 
-  df.bins <- lapply(gather_cols, function(col_nm){
-    df %>%
+  sdf.bins <- lapply(gather_cols, function(col_nm){
+    sdf %>%
       select(col_nm) %>%
       rename(value = col_nm) %>%
       mutate(key = col_nm,

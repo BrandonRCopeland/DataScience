@@ -36,9 +36,9 @@ df_categorical_feature_dist <- function(df, gather_cols, key = "key", value = "v
 df_bins <- function(df, gather_cols){
 
   df.bins <- lapply(gather_cols, function(col_nm){
-    df %>%
+    df[[col_nm]] %>%
       select(col_nm) %>%
-      rename(value = col_nm) %>%
+      rename(value = !!names(.[1])) %>%
       mutate(variable = col_nm,
              bin = ntile(value, 10)) %>%
       group_by(variable, bin) %>%
