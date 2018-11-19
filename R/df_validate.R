@@ -48,7 +48,7 @@ df_validate <- function(actual, expected, features, key, matchTestPct = 0.98, me
 
   #Join actual and expected and tally matches
   df.matches.subscriptions <- left_join(df.expected.long, df.actual.long,
-                                        by = c(key,"Feature"),
+                                        by = c("key","Feature"),
                                         suffix = c(".expected", ".actual")) %>%
     mutate(IsMatch = ifelse(Value.expected == Value.actual,1,0),
            IsHigher = ifelse(Value.expected < Value.actual,1,0),
