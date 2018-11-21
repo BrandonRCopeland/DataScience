@@ -34,7 +34,7 @@ df_get_feature_bins <- function(data_, features_ = NULL, dataType = "numeric", b
       group_by(feature, bin) %>%
       summarise(min = min(value),
                 max = max(value)) %>%
-      filter(min != max) %>%
+      filter(min != max & min != 0) %>% #edge cases where all bins are 0 min and max
       mutate(min = ifelse(bin == min(bin, na.rm = TRUE), -Inf, min),
              max = as.numeric(ifelse(bin == max(bin, na.rm = TRUE), Inf, max))) %>%
       arrange(feature, bin) %>%
