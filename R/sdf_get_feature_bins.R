@@ -12,7 +12,6 @@
 #' @param features A vector of the numeric feature names to be binned
 #' @param bins The number of bins to create in.  Use the L suffix to ensure the value is an integer.
 #' @return A tbl_Spark containing the feature name, bin number, min value, and max value
-#' @export
 sdf_get_feature_bins <- function(sdf, features, bins) {
 
   output_cols <- vector()

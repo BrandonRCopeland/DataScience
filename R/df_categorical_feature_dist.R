@@ -12,7 +12,6 @@
 #' @param key tbd
 #' @param value tbd
 #' @return base R dataframe
-#' @export
 df_categorical_feature_dist <- function(df, gather_cols, key = "key", value = "value"){
 
   df.bins <- lapply(gather_cols, function(col_nm){
