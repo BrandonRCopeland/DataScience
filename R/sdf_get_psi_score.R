@@ -19,7 +19,7 @@ sdf_get_psi_score <- function(sdf_expected, sdf_actual, features = NULL, bins = 
       bins = 10L
     }
 
-    sdf.feature_distribution <- get_feature_distribution(sdf_expected, sdf_actual, features, bins)
+    sdf.feature_distribution <- sdf_get_feature_distribution(sdf_expected, sdf_actual, features, bins)
 
     sdf.psi_scores <- sdf.feature_distribution %>%
         dplyr::group_by(feature) %>%
