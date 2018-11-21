@@ -16,10 +16,10 @@
 df_validate <- function(actual, expected, features, key, matchTestPct = 0.98, meanTestPct = 0.02){
 
   #remove _new labels from the bridge view
-  actual <- df.actual %>%
+  actual <- actual %>%
     select(one_of(features))
 
-  expected <- df.expected %>%
+  expected <- expected %>%
     select(one_of(features))
 
   #Get mean differentials
