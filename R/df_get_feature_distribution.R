@@ -111,7 +111,7 @@ df_get_feature_distribution <- function(expected_, actual_, features_){
                     min = NaN,
                     max = NaN,
                     DataType = "categorical") %>%
-      dplyr::select(feature, bin, min, max, Expected, Expected_pct, Actual, Actual_pct, Index) %>%
+      dplyr::select(feature, bin, min, max, DataType, Expected, Expected_pct, Actual, Actual_pct, Index) %>%
       dplyr::arrange(feature, bin)
   }
 
