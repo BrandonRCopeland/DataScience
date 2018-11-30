@@ -12,10 +12,9 @@
 #' @param expected_ Required: A matrix containing features with the expected (old) data.
 #' @param actual_ Required: A matrix containing features from with the actual (new) data.
 #' @param features_ Optional: A vector of the feature names to validate.  Note, the feature names must exist in both expected_ and actual_ and be of the same data type in each data frame.  If not features are provided, all features in expected_ will be used.
-#' @param bins_ Optional: An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
 #' @return A matrix containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index
 #' @export
-df_get_feature_distribution <- function(expected_, actual_, features_ = NULLL){
+df_get_feature_distribution <- function(expected_, actual_, features_ = NULL){
 
   if (!missing(features_)){
     df.expected_ <- expected_ %>% dplyr::select(features_)

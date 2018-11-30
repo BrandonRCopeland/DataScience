@@ -4,8 +4,7 @@
 \alias{df_get_feature_distribution}
 \title{Calculate the bin-level PSI index for the specified numeric features}
 \usage{
-df_get_feature_distribution(expected_, actual_, features_ = NULL,
-  bins_ = NULL)
+df_get_feature_distribution(expected_, actual_, features_ = NULLL)
 }
 \arguments{
 \item{expected_}{Required: A matrix containing features with the expected (old) data.}
