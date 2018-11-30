@@ -15,11 +15,7 @@
 #' @param bins_ Optional: An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
 #' @return A matrix containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index
 #' @export
-df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bins_ = NULL){
-
-  if (missing(bins_)) {
-    bins_ = 10L
-  }
+df_get_feature_distribution <- function(expected_, actual_, features_ = NULLL){
 
   if (!missing(features_)){
     df.expected_ <- expected_ %>% dplyr::select(features_)
@@ -50,7 +46,7 @@ df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bi
 
   if(length(numericFeatures_) > 0) {
 
-    df.bins_ <- df_get_feature_bins(df.expected.numeric_, numericFeatures_, "numeric", bins_)
+    df.bins_ <- df_get_feature_bins(df.expected.numeric_, numericFeatures_, dataType = "numeric", bins_ = 10L)
 
     df.expected.numeric_ <- df.expected.numeric_ %>%
       tidyr::gather(key = "feature", value = "value")
