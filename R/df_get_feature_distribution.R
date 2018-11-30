@@ -29,8 +29,8 @@ df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bi
     df.actual_ <- actual_
   }
 
-  numericFeatures_ <- tbl_vars(df.expected_ %>% dplyr::select_if(function(col) is.numeric(col)))
-  categoricalFeatures_ <- tbl_vars(df.expected_ %>% dplyr::select_if(function(col) is.character(col) | is.factor(col)))
+  numericFeatures_ <- colnames(df.expected_ %>% dplyr::select_if(function(col) is.numeric(col)))
+  categoricalFeatures_ <- colnames(df.expected_ %>% dplyr::select_if(function(col) is.character(col) | is.factor(col)))
 
   if (length(numericFeatures_) > 0) {
     df.expected.numeric_ <- expected_ %>% dplyr::select(one_of(numericFeatures_))
