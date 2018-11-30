@@ -26,7 +26,7 @@ df_get_feature_bins <- function(data_, features_ = NULL, dataType = "numeric", b
   if(dataType == "numeric"){
 
     df.numeric.temp_ <- data_ %>%
-      dplyr::select(one_of(features_)) %>%
+      dplyr::select(features_) %>%
       dplyr::select_if(is.numeric) %>%
       tidyr::gather('feature', 'value') %>%
       dplyr::group_by(feature) %>%
@@ -46,7 +46,7 @@ df_get_feature_bins <- function(data_, features_ = NULL, dataType = "numeric", b
 
   if(dataType == "categorical"){
     df.categorical.temp_ <- data_ %>%
-      dplyr::select(one_of(features_)) %>%
+      dplyr::select(features_) %>%
       dplyr::select_if(function(col) is.character(col) | is.factor(col)) %>%
       dplyr::mutate_all(funs(as.character)) %>%
       tidy::gather('feature', 'bin') %>%

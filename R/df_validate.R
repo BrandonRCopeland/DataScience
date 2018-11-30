@@ -23,8 +23,8 @@ df_validate <- function(actual, expected, features, key, matchTestPct = 0.98, me
     dplyr::select(one_of(features))
 
   #Get mean differentials
-  df.means.expected <- df_means(expected %>% dplyr::select(-one_of(key)))
-  df.means.actual <- df_means(actual %>% dplyr::select(-one_of(key)))
+  df.means.expected <- df_means(expected %>% dplyr::select(-key))
+  df.means.actual <- df_means(actual %>% dplyr::select(-key))
 
   df.means <- dplyr::left_join(df.means.expected,
                         df.means.actual,

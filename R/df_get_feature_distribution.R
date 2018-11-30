@@ -22,8 +22,8 @@ df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bi
   }
 
   if (!missing(features_)){
-    df.expected_ <- expected_ %>% dplyr::select(one_of(features_))
-    df.actual_ <- actual_ %>% dplyr::select(one_of(features_))
+    df.expected_ <- expected_ %>% dplyr::select(features_)
+    df.actual_ <- actual_ %>% dplyr::select(features_)
   } else {
     df.expected_ <- expected_
     df.actual_ <- actual_
@@ -33,16 +33,16 @@ df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bi
   categoricalFeatures_ <- colnames(df.expected_ %>% dplyr::select_if(function(col) is.character(col) | is.factor(col)))
 
   if (length(numericFeatures_) > 0) {
-    df.expected.numeric_ <- expected_ %>% dplyr::select(one_of(numericFeatures_))
-    df.actual.numeric_ <- actual_ %>% dplyr::select(one_of(numericFeatures_))
+    df.expected.numeric_ <- expected_ %>% dplyr::select(numericFeatures_)
+    df.actual.numeric_ <- actual_ %>% dplyr::select(numericFeatures_)
   } else {
     df.expected.numeric_ <- NULL
     df.actual.numeric_ <- NULL
   }
 
   if (length(categoricalFeatures_) > 0){
-    df.expected.categorical_ <- expected_ %>% dplyr::select(one_of(categoricalFeatures_))
-    df.actual.categorical_ <- actual_ %>% dplyr::select(one_of(categoricalFeatures_))
+    df.expected.categorical_ <- expected_ %>% dplyr::select(categoricalFeatures_)
+    df.actual.categorical_ <- actual_ %>% dplyr::select(categoricalFeatures_)
   } else {
     df.expected.categorical_ <- NULL
     df.actual.categorical_ <- NULL
