@@ -50,7 +50,7 @@ df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bi
 
   if(length(numericFeatures_) > 0) {
 
-    df.bins_ <- df_get_feature_bins(df.expected.numeric_, dataType = "numeric")
+    df.bins_ <- df_get_feature_bins(df.expected.numeric_, dataType = "numeric", bins_)
 
     df.expected.numeric_ <- df.expected.numeric_ %>%
       tidyr::gather(key = "feature", value = "value")
