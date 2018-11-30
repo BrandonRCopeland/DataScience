@@ -79,7 +79,7 @@ df_validate <- function(actual, expected, features, key, matchTestPct = 0.98, me
   
   df.psi.temp <- df_get_psi_score(actual, expected, features)
 
-  df.validation.temp %>%
+  df.validation.temp <- df.validation.temp %>%
     dplyr::left_join(df.psi.temp, by = c("Feature" = "feature"))
 
   return(df.validation.temp)
