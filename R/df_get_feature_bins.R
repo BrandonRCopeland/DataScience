@@ -25,7 +25,7 @@ df_get_feature_bins <- function(data_, features_ = NULL, dataType = "numeric") {
       dplyr::select_if(is.numeric) %>%
       tidyr::gather('feature', 'value') %>%
       dplyr::group_by(feature) %>%
-      dplyr::mutate(bin = ntile(value, 10L)) %>%
+      dplyr::mutate(bin = ntile(value, 10)) %>%
       dplyr::group_by(feature, bin) %>%
       dplyr::summarise(min = min(value),
                 max = max(value)) %>%
