@@ -26,19 +26,19 @@ df_get_feature_bins <- function(data_, features_ = NULL, dataType = "numeric", b
   if(dataType == "numeric"){
 
     df.numeric.temp_ <- data_ %>%
-      select(one_of(features_)) %>%
-      select_if(is.numeric) %>%
-      gather('feature', 'value') %>%
-      group_by(feature) %>%
-      mutate(bin = ntile(value, bins_)) %>%
-      group_by(feature, bin) %>%
-      summarise(min = min(value),
+      dplyr::select(one_of(features_)) %>%
+      dplyr::select_if(is.numeric) %>%
+      tidyr::gather('feature', 'value') %>%
+      dplyr::group_by(feature) %>%
+      dplyr::mutate(bin = ntile(value, bins_)) %>%
+      dplyr::group_by(feature, bin) %>%
+      dplyr::summarise(min = min(value),
                 max = max(value)) %>%
-      filter(row_number() == 1 | min != max) %>% #edge cases where all bins are 0 min and max
-      mutate(min = ifelse(bin == min(bin, na.rm = TRUE), -Inf, min),
+      dplyr::filter(row_number() == 1 | min != max) %>% #edge cases where all bins are 0 min and max
+      dplyr::mutate(min = ifelse(bin == min(bin, na.rm = TRUE), -Inf, min),
              max = as.numeric(ifelse(bin == max(bin, na.rm = TRUE), Inf, max))) %>%
-      arrange(feature, bin) %>%
-      mutate(bin = as.character(row_number()),
+      dplyr::arrange(feature, bin) %>%
+      dplyr::mutate(bin = as.character(row_number()),
              DataType = "numeric")
 
     return(df.numeric.temp_)
@@ -46,15 +46,15 @@ df_get_feature_bins <- function(data_, features_ = NULL, dataType = "numeric", b
 
   if(dataType == "categorical"){
     df.categorical.temp_ <- data_ %>%
-      select(one_of(features_)) %>%
-      select_if(function(col) is.character(col) | is.factor(col)) %>%
-      mutate_all(funs(as.character)) %>%
-      gather('feature', 'bin') %>%
-      distinct(feature, bin) %>%
-      mutate(min = NaN,
+      dplyr::select(one_of(features_)) %>%
+      dplyr::select_if(function(col) is.character(col) | is.factor(col)) %>%
+      dplyr::mutate_all(funs(as.character)) %>%
+      tidy::gather('feature', 'bin') %>%
+      dplyr::distinct(feature, bin) %>%
+      dplyr::mutate(min = NaN,
              max = NaN,
              DataType = "categorical") %>%
-      arrange(feature, bin)
+      dplyr::arrange(feature, bin)
 
     return(df.categorical.temp_)
   }

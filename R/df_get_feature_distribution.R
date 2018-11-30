@@ -22,27 +22,27 @@ df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bi
   }
 
   if (!missing(features_)){
-    df.expected_ <- expected_ %>% select(one_of(features_))
-    df.actual_ <- actual_ %>% select(one_of(features_))
+    df.expected_ <- expected_ %>% dplyr::select(one_of(features_))
+    df.actual_ <- actual_ %>% dplyr::select(one_of(features_))
   } else {
     df.expected_ <- expected_
     df.actual_ <- actual_
   }
 
-  numericFeatures_ <- tbl_vars(df.expected_ %>% select_if(function(col) is.numeric(col)))
-  categoricalFeatures_ <- tbl_vars(df.expected_ %>% select_if(function(col) is.character(col) | is.factor(col)))
+  numericFeatures_ <- tbl_vars(df.expected_ %>% dplyr::select_if(function(col) is.numeric(col)))
+  categoricalFeatures_ <- tbl_vars(df.expected_ %>% dplyr::select_if(function(col) is.character(col) | is.factor(col)))
 
   if (length(numericFeatures_) > 0) {
-    df.expected.numeric_ <- expected_ %>% select(one_of(numericFeatures_))
-    df.actual.numeric_ <- actual_ %>% select(one_of(numericFeatures_))
+    df.expected.numeric_ <- expected_ %>% dplyr::select(one_of(numericFeatures_))
+    df.actual.numeric_ <- actual_ %>% dplyr::select(one_of(numericFeatures_))
   } else {
     df.expected.numeric_ <- NULL
     df.actual.numeric_ <- NULL
   }
 
   if (length(categoricalFeatures_) > 0){
-    df.expected.categorical_ <- expected_ %>% select(one_of(categoricalFeatures_))
-    df.actual.categorical_ <- actual_ %>% select(one_of(categoricalFeatures_))
+    df.expected.categorical_ <- expected_ %>% dplyr::select(one_of(categoricalFeatures_))
+    df.actual.categorical_ <- actual_ %>% dplyr::select(one_of(categoricalFeatures_))
   } else {
     df.expected.categorical_ <- NULL
     df.actual.categorical_ <- NULL
@@ -53,10 +53,10 @@ df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bi
     df.bins_ <- df_get_feature_bins(df.expected.numeric_, dataType = "numeric")
 
     df.expected.numeric_ <- df.expected.numeric_ %>%
-      gather(key = "feature", value = "value")
+      tidyr::gather(key = "feature", value = "value")
 
     df.actual.numeric_ <- df.actual.numeric_ %>%
-      gather(key = "feature", value = "value")
+      tidyr::gather(key = "feature", value = "value")
 
     df.distribution.expected.numeric_ <- dplyr::inner_join(df.expected.numeric_,
                                                            df.bins_,
@@ -90,24 +90,24 @@ df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bi
   if(length(categoricalFeatures_) > 0) {
 
     df.expected.categorical_ <- df.expected.categorical_ %>%
-      mutate_all(funs(as.character)) %>%
-      gather(key = "feature", value = "value")
+      dplyr::mutate_all(funs(as.character)) %>%
+      tidyr::gather(key = "feature", value = "value")
 
     df.actual.categorical_ <- df.actual.categorical_ %>%
-      mutate_all(funs(as.character)) %>%
-      gather(key = "feature", value = "value")
+      dplyr::mutate_all(funs(as.character)) %>%
+      tidyr::gather(key = "feature", value = "value")
 
     df.distribution.expected.categorical_ <- df.expected.categorical_ %>%
-      group_by(feature, value) %>%
-      summarise(Expected = n()) %>%
-      mutate(Expected_pct = Expected / sum(Expected, na.rm = TRUE)) %>%
-      arrange(feature)
+      dplyr::group_by(feature, value) %>%
+      dplyr::summarise(Expected = n()) %>%
+      dplyr::mutate(Expected_pct = Expected / sum(Expected, na.rm = TRUE)) %>%
+      dplyr::arrange(feature)
 
     df.distribution.actual.categorical_ <- df.actual.categorical_ %>%
-      group_by(feature, value) %>%
-      summarise(Actual = n()) %>%
-      mutate(Actual_pct = Actual / sum(Actual, na.rm = TRUE)) %>%
-      arrange(feature)
+      dplyr::group_by(feature, value) %>%
+      dplyr::summarise(Actual = n()) %>%
+      dplyr::mutate(Actual_pct = Actual / sum(Actual, na.rm = TRUE)) %>%
+      dplyr::arrange(feature)
 
 
     df.distribution.categorical_ <- dplyr::full_join(df.distribution.expected.categorical_,
@@ -122,7 +122,7 @@ df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bi
   }
 
   if(length(numericFeatures_) > 0 & length(categoricalFeatures_) > 0){
-    df.distribution_ <- bind_rows(df.distribution.numeric_, df.distribution.categorical_)
+    df.distribution_ <- dplyr::bind_rows(df.distribution.numeric_, df.distribution.categorical_)
   } else if (length(numericFeatures_) > 0){
     df.distribution_ <- df.distribution.numeric_
   } else if (length(categoricalFeatures_) > 0){

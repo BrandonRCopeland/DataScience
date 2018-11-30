@@ -16,16 +16,16 @@ df_categorical_feature_dist <- function(df, gather_cols, key = "key", value = "v
 
   df.bins <- lapply(gather_cols, function(col_nm){
     df %>%
-      select(col_nm) %>%
-      mutate(key = col_nm) %>%
-      rename(value = col_nm) %>%
-      group_by(key, value) %>%
-      summarise(Distribution = n()) %>%
-      mutate(Relative_Distribution = Distribution / sum(Distribution, na.rm = TRUE))
+      dplyr::select(col_nm) %>%
+      dplyr::mutate(key = col_nm) %>%
+      dplyr::rename(value = col_nm) %>%
+      dplyr::group_by(key, value) %>%
+      dplyr::summarise(Distribution = n()) %>%
+      dplyr::mutate(Relative_Distribution = Distribution / sum(Distribution, na.rm = TRUE))
   }) %>%
-    bind_rows() %>%
-    arrange(key, value) %>%
-    rename(!!key := key,
+    dplyr::bind_rows() %>%
+    dplyr::arrange(key, value) %>%
+    dplyr::rename(!!key := key,
            !!value := value)
 
   return(df.bins)
