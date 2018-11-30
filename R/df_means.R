@@ -5,12 +5,13 @@
 #' @export
 df_means <- function(df){
 
-  df.means <- df %>%
-    dplyr::select_if(is.numeric) %>%
+  df.means.temp <- df %>%
+    dplyr::mutate_all(as.factor) %>%   ## Convert every variable to feature, so we can then...
+    dplyr::mutate_all(as.integer) %>%  ## convert the features to integers.
     dplyr::summarise_all(mean) %>%
     tidyr::gather(key = "Feature", value = "Mean") %>%
     dplyr::mutate(Mean = round(Mean, 4))
 
-  return(df.means)
+  return(df.means.temp)
 
 }
