@@ -4,7 +4,7 @@
 \alias{df_get_feature_bins}
 \title{Create bins for numeric features}
 \usage{
-df_get_feature_bins(data_, features_ = NULL, dataType = "numeric")
+df_get_feature_bins(data_, features_, dataType = "numeric")
 }
 \arguments{
 \item{data_}{A data.frame containing features that need to be binned.}

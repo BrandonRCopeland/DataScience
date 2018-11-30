@@ -12,11 +12,7 @@
 #' @param features_ A vector of the numeric feature names to be binned
 #' @return A data.frame containing the feature name, bin number, min value, and max value
 #' @export
-df_get_feature_bins <- function(data_, features_ = NULL, dataType = "numeric") {
-
-  if(missing(features_)){
-    features_ <- colnames(data_)
-  }
+df_get_feature_bins <- function(data_, features_, dataType = "numeric") {
 
   if(dataType == "numeric"){
 
