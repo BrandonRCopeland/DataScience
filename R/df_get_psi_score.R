@@ -11,20 +11,11 @@
 #' @param expected_ Required: A matrix containing features with the expected (old) data.
 #' @param actual_ Required: A matrix containing features from with the actual (new) data.
 #' @param features_ Optional: A vector of the feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_actual and be of the same data type in each data frame.  If not features are provided, all features in sdf_expected will be used.
-#' @param bins_ Optional: An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
 #' @return A matrix containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index
 #' @export
-df_get_psi_score <- function(expected_, actual_, features_ = NULL, bins_ = NULL) {
+df_get_psi_score <- function(expected_, actual_, features_) {
 
-    if (missing(bins_)){
-      bins_ = 10L
-    }
-
-    if (missing(features_)){
-      features_ <- colnames(expected_)
-    }
-
-   feature_distribution_ <- df_get_feature_distribution(expected_, actual_, features_, bins_)
+   feature_distribution_ <- df_get_feature_distribution(expected_, actual_, features_)
 
     psi_scores_ <- feature_distribution_ %>%
         dplyr::group_by(feature) %>%

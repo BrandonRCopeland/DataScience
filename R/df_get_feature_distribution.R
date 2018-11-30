@@ -14,10 +14,13 @@
 #' @param features_ Optional: A vector of the feature names to validate.  Note, the feature names must exist in both expected_ and actual_ and be of the same data type in each data frame.  If not features are provided, all features in expected_ will be used.
 #' @return A matrix containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index
 #' @export
-df_get_feature_distribution <- function(expected_, actual_, features_ ){
+df_get_feature_distribution <- function(expected_, actual_, features_){
 
-    df.expected_ <- expected_
-    df.actual_ <- actual_
+    df.expected_ <- expected_ %>% select(one_of(features_))
+    df.actual_ <- actual_ %>% select(one_of(features_))
+
+    df.expected_ <- expected_ %>% select(one_of(features_))
+    df.actual_ <- actual_ %>% select(one_of(features_))
 
   numericFeatures_ <- colnames(df.expected_ %>% dplyr::select_if(function(col) is.numeric(col)))
   categoricalFeatures_ <- colnames(df.expected_ %>% dplyr::select_if(function(col) is.character(col) | is.factor(col)))

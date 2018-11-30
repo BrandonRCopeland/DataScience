@@ -28,5 +28,7 @@ This function takes two datasets (actual and expected) and validates them based 
 features match exact values at the id level as well as an aggregate % difference in the means.
 }
 \details{
-NOTE: The columns to be validate must have the same name in each dataset
+NOTE: The columns to be validate must have the same name in each dataset.  If categorical features
+      are included, they will be converted to integer values so means can be established.  Integer
+      order is determined by an ascending sort of the categorical variable.
 }

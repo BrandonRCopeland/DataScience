@@ -9,7 +9,8 @@
 #'       other types of data, please filter them out before passing to the function.
 
 #' @param data_ A data.frame containing features that need to be binned.
-#' @param features_ A vector of the numeric feature names to be binned
+#' @param features_ A vector of the numeric feature names to be binned.
+#' @param dataType "numeric" or "categorical"
 #' @return A data.frame containing the feature name, bin number, min value, and max value
 #' @export
 df_get_feature_bins <- function(data_, features_, dataType = "numeric") {
