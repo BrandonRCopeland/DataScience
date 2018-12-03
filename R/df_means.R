@@ -6,8 +6,8 @@
 df_means <- function(df){
 
   df.means.temp <- df %>%
-    dplyr::mutate_all(as.factor) %>%   ## Convert every variable to feature, so we can then...
-    dplyr::mutate_all(as.integer) %>%  ## convert the features to integers.
+    dplyr::mutate_if(is.character, funs(as.factor)) %>%   ## Convert every variable to feature, so we can then...
+    dplyr::mutate_if(is.factor, funs(as.integer)) %>%  ## convert the features to integers.)
     dplyr::summarise_all(mean) %>%
     tidyr::gather(key = "Feature", value = "Mean") %>%
     dplyr::mutate(Mean = round(Mean, 4))
