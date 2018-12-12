@@ -12,37 +12,30 @@
 #' @param expected_ Required: A matrix containing features with the expected (old) data.
 #' @param actual_ Required: A matrix containing features from with the actual (new) data.
 #' @param features_ Optional: A vector of the feature names to validate.  Note, the feature names must exist in both expected_ and actual_ and be of the same data type in each data frame.  If not features are provided, all features in expected_ will be used.
-#' @param bins_ Optional: An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution
 #' @return A matrix containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index
 #' @export
-df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bins_ = NULL){
+df_get_feature_distribution <- function(expected_, actual_, features_){
 
-  if (missing(bins_)) {
-    bins_ = 10L
-  }
+    df.expected_ <- expected_ %>% select(one_of(features_))
+    df.actual_ <- actual_ %>% select(one_of(features_))
 
-  if (!missing(features_)){
-    df.expected_ <- expected_ %>% dplyr::select(one_of(features_))
-    df.actual_ <- actual_ %>% dplyr::select(one_of(features_))
-  } else {
-    df.expected_ <- expected_
-    df.actual_ <- actual_
-  }
+    df.expected_ <- expected_ %>% select(one_of(features_))
+    df.actual_ <- actual_ %>% select(one_of(features_))
 
   numericFeatures_ <- colnames(df.expected_ %>% dplyr::select_if(function(col) is.numeric(col)))
   categoricalFeatures_ <- colnames(df.expected_ %>% dplyr::select_if(function(col) is.character(col) | is.factor(col)))
 
   if (length(numericFeatures_) > 0) {
-    df.expected.numeric_ <- expected_ %>% dplyr::select(one_of(numericFeatures_))
-    df.actual.numeric_ <- actual_ %>% dplyr::select(one_of(numericFeatures_))
+    df.expected.numeric_ <- expected_ %>% dplyr::select(numericFeatures_)
+    df.actual.numeric_ <- actual_ %>% dplyr::select(numericFeatures_)
   } else {
     df.expected.numeric_ <- NULL
     df.actual.numeric_ <- NULL
   }
 
   if (length(categoricalFeatures_) > 0){
-    df.expected.categorical_ <- expected_ %>% dplyr::select(one_of(categoricalFeatures_))
-    df.actual.categorical_ <- actual_ %>% dplyr::select(one_of(categoricalFeatures_))
+    df.expected.categorical_ <- expected_ %>% dplyr::select(categoricalFeatures_)
+    df.actual.categorical_ <- actual_ %>% dplyr::select(categoricalFeatures_)
   } else {
     df.expected.categorical_ <- NULL
     df.actual.categorical_ <- NULL
@@ -50,7 +43,7 @@ df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bi
 
   if(length(numericFeatures_) > 0) {
 
-    df.bins_ <- df_get_feature_bins(df.expected.numeric_, dataType = "numeric", bins_)
+    df.bins_ <- df_get_feature_bins(df.expected.numeric_, numericFeatures_, dataType = "numeric")
 
     df.expected.numeric_ <- df.expected.numeric_ %>%
       tidyr::gather(key = "feature", value = "value")
@@ -116,8 +109,9 @@ df_get_feature_distribution <- function(expected_, actual_, features_ = NULL, bi
       dplyr::mutate(Index = (Actual_pct - Expected_pct) * log(Actual_pct / Expected_pct),
                     bin = value,
                     min = NaN,
-                    max = NaN) %>%
-      dplyr::select(feature, bin, min, max, Expected, Expected_pct, Actual, Actual_pct, Index) %>%
+                    max = NaN,
+                    DataType = "categorical") %>%
+      dplyr::select(feature, bin, min, max, DataType, Expected, Expected_pct, Actual, Actual_pct, Index) %>%
       dplyr::arrange(feature, bin)
   }
 

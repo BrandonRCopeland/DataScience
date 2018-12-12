@@ -4,7 +4,7 @@
 \alias{df_get_psi_score}
 \title{Calculate the feature-level PSI index for the specified numeric features}
 \usage{
-df_get_psi_score(expected_, actual_, features_ = NULL, bins_ = NULL)
+df_get_psi_score(expected_, actual_, features_)
 }
 \arguments{
 \item{expected_}{Required: A matrix containing features with the expected (old) data.}
@@ -12,8 +12,6 @@ df_get_psi_score(expected_, actual_, features_ = NULL, bins_ = NULL)
 \item{actual_}{Required: A matrix containing features from with the actual (new) data.}
 
 \item{features_}{Optional: A vector of the feature names to validate.  Note, the feature names must exist in both sdf_expected and sdf_actual and be of the same data type in each data frame.  If not features are provided, all features in sdf_expected will be used.}
-
-\item{bins_}{Optional: An int (example, 10L) value representing the number of bins to create for the continuous variables.  Actuall bins may be less depending on the distribution}
 }
 \value{
 A matrix containing the feature name, bin, min value, max value, expected count, expected %, actual count, actual %, and index

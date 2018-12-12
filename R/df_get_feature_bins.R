@@ -9,28 +9,20 @@
 #'       other types of data, please filter them out before passing to the function.
 
 #' @param data_ A data.frame containing features that need to be binned.
-#' @param features_ A vector of the numeric feature names to be binned
-#' @param bins The number of bins to create in.  Use the L suffix to ensure the value is an integer.
+#' @param features_ A vector of the numeric feature names to be binned.
+#' @param dataType "numeric" or "categorical"
 #' @return A data.frame containing the feature name, bin number, min value, and max value
 #' @export
-df_get_feature_bins <- function(data_, features_ = NULL, dataType = "numeric", bins_ = NULL) {
-
-  if(missing(features_)){
-    features_ <- colnames(data_)
-  }
-
-  if(missing(bins_)){
-    bins_ = 10L
-  }
+df_get_feature_bins <- function(data_, features_, dataType = "numeric") {
 
   if(dataType == "numeric"){
 
     df.numeric.temp_ <- data_ %>%
-      dplyr::select(one_of(features_)) %>%
+      dplyr::select(features_) %>%
       dplyr::select_if(is.numeric) %>%
       tidyr::gather('feature', 'value') %>%
       dplyr::group_by(feature) %>%
-      dplyr::mutate(bin = ntile(value, bins_)) %>%
+      dplyr::mutate(bin = ntile(value, 10)) %>%
       dplyr::group_by(feature, bin) %>%
       dplyr::summarise(min = min(value),
                 max = max(value)) %>%
@@ -46,7 +38,7 @@ df_get_feature_bins <- function(data_, features_ = NULL, dataType = "numeric", b
 
   if(dataType == "categorical"){
     df.categorical.temp_ <- data_ %>%
-      dplyr::select(one_of(features_)) %>%
+      dplyr::select(features_) %>%
       dplyr::select_if(function(col) is.character(col) | is.factor(col)) %>%
       dplyr::mutate_all(funs(as.character)) %>%
       tidy::gather('feature', 'bin') %>%

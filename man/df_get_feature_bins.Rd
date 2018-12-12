@@ -4,15 +4,14 @@
 \alias{df_get_feature_bins}
 \title{Create bins for numeric features}
 \usage{
-df_get_feature_bins(data_, features_ = NULL, dataType = "numeric",
-  bins_ = NULL)
+df_get_feature_bins(data_, features_, dataType = "numeric")
 }
 \arguments{
 \item{data_}{A data.frame containing features that need to be binned.}
 
-\item{features_}{A vector of the numeric feature names to be binned}
+\item{features_}{A vector of the numeric feature names to be binned.}
 
-\item{bins}{The number of bins to create in.  Use the L suffix to ensure the value is an integer.}
+\item{dataType}{"numeric" or "categorical"}
 }
 \value{
 A data.frame containing the feature name, bin number, min value, and max value
