@@ -16,11 +16,11 @@
 #' @export
 df_get_feature_distribution <- function(expected_, actual_, features_){
 
-    df.expected_ <- expected_ %>% select(one_of(features_))
-    df.actual_ <- actual_ %>% select(one_of(features_))
+    df.expected_ <- expected_ %>% dplyr::select(one_of(features_))
+    df.actual_ <- actual_ %>% dplyr::select(one_of(features_))
 
-    df.expected_ <- expected_ %>% select(one_of(features_))
-    df.actual_ <- actual_ %>% select(one_of(features_))
+    df.expected_ <- expected_ %>% dplyr::select(one_of(features_))
+    df.actual_ <- actual_ %>% dplyr::select(one_of(features_))
 
   numericFeatures_ <- colnames(df.expected_ %>% dplyr::select_if(function(col) is.numeric(col)))
   categoricalFeatures_ <- colnames(df.expected_ %>% dplyr::select_if(function(col) is.character(col) | is.factor(col)))
