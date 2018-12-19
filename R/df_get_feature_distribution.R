@@ -16,32 +16,57 @@
 #' @export
 df_get_feature_distribution <- function(expected_, actual_, features_){
 
-    df.expected_ <- expected_ %>% dplyr::select(one_of(features_))
-    df.actual_ <- actual_ %>% dplyr::select(one_of(features_))
+  df.expected_ <- expected_ %>%
+    dplyr::select(dplyr::one_of(features_))
 
-    df.expected_ <- expected_ %>% dplyr::select(one_of(features_))
-    df.actual_ <- actual_ %>% dplyr::select(one_of(features_))
+  df.actual_ <- actual_ %>%
+    dplyr::select(dplyr::one_of(features_))
 
-  numericFeatures_ <- colnames(df.expected_ %>% dplyr::select_if(function(col) is.numeric(col)))
-  categoricalFeatures_ <- colnames(df.expected_ %>% dplyr::select_if(function(col) is.character(col) | is.factor(col)))
+  df.expected_ <- expected_ %>%
+    dplyr::select(dplyr::one_of(features_))
 
-  if (length(numericFeatures_) > 0) {
-    df.expected.numeric_ <- expected_ %>% dplyr::select(one_of(numericFeatures_))
-    df.actual.numeric_ <- actual_ %>% dplyr::select(one_of(numericFeatures_))
+  df.actual_ <- actual_ %>%
+    dplyr::select(dplyr::one_of(features_))
+
+  numericFeatures_ <- base::colnames(df.expected_ %>%
+                                       dplyr::select_if(function(col) is.numeric(col)))
+
+  categoricalFeatures_ <- base::colnames(df.expected_ %>%
+                                           dplyr::select_if(function(col) is.character(col) | is.factor(col)))
+
+  if (base::length(numericFeatures_) > 0) {
+
+    df.expected.numeric_ <- expected_ %>%
+      dplyr::select(dplyr::one_of(numericFeatures_))
+
+    df.actual.numeric_ <- actual_ %>%
+      dplyr::select(dplyr::one_of(numericFeatures_))
+
   } else {
+
     df.expected.numeric_ <- NULL
+
     df.actual.numeric_ <- NULL
+
   }
 
-  if (length(categoricalFeatures_) > 0){
-    df.expected.categorical_ <- expected_ %>% dplyr::select(one_of(categoricalFeatures_))
-    df.actual.categorical_ <- actual_ %>% dplyr::select(one_of(categoricalFeatures_))
+  if (base::length(categoricalFeatures_) > 0){
+
+    df.expected.categorical_ <- expected_ %>%
+      dplyr::select(dplyr::one_of(categoricalFeatures_))
+
+    df.actual.categorical_ <- actual_ %>%
+      dplyr::select(dplyr::one_of(categoricalFeatures_))
+
   } else {
+
     df.expected.categorical_ <- NULL
+
     df.actual.categorical_ <- NULL
+
   }
 
-  if(length(numericFeatures_) > 0) {
+  if(base::length(numericFeatures_) > 0) {
 
     df.bins_ <- df_get_feature_bins(df.expected.numeric_, numericFeatures_, dataType = "numeric")
 
@@ -56,8 +81,8 @@ df_get_feature_distribution <- function(expected_, actual_, features_){
                                                            by = c("feature")) %>%
       dplyr::filter(value > min & value <= max) %>%
       dplyr::group_by(feature, bin) %>%
-      dplyr::summarise(Expected = n()) %>%
-      dplyr::mutate(Expected_pct = Expected / sum(Expected)) %>%
+      dplyr::summarise(Expected = dplyr::n()) %>%
+      dplyr::mutate(Expected_pct = Expected / base::sum(Expected)) %>%
       dplyr::arrange(feature, bin)
 
     df.distribution.actual.numeric_ <- dplyr::inner_join(df.actual.numeric_,
@@ -65,8 +90,8 @@ df_get_feature_distribution <- function(expected_, actual_, features_){
                                                          by = c("feature")) %>%
       dplyr::filter(value > min & value <= max) %>%
       dplyr::group_by(feature, bin) %>%
-      dplyr::summarise(Actual = n()) %>%
-      dplyr::mutate(Actual_pct = Actual / sum(Actual)) %>%
+      dplyr::summarise(Actual = dplyr::n()) %>%
+      dplyr::mutate(Actual_pct = Actual / base::sum(Actual)) %>%
       dplyr::arrange(feature, bin)
 
     df.distribution.numeric_ <- dplyr::left_join(df.bins_,
@@ -76,11 +101,11 @@ df_get_feature_distribution <- function(expected_, actual_, features_){
     df.distribution.numeric_ <- dplyr::left_join(df.distribution.numeric_,
                                                  df.distribution.actual.numeric_,
                                                  by = c("feature", "bin")) %>%
-      dplyr::mutate(bin = as.character(bin), Index = (Actual_pct - Expected_pct) * log(Actual_pct / Expected_pct)) %>%
+      dplyr::mutate(bin = as.character(bin), Index = (Actual_pct - Expected_pct) * base::log(Actual_pct / Expected_pct)) %>%
       dplyr::arrange(feature, bin)
   }
 
-  if(length(categoricalFeatures_) > 0) {
+  if(base::length(categoricalFeatures_) > 0) {
 
     df.expected.categorical_ <- df.expected.categorical_ %>%
       dplyr::mutate_all(funs(as.character)) %>%
@@ -92,21 +117,21 @@ df_get_feature_distribution <- function(expected_, actual_, features_){
 
     df.distribution.expected.categorical_ <- df.expected.categorical_ %>%
       dplyr::group_by(feature, value) %>%
-      dplyr::summarise(Expected = n()) %>%
-      dplyr::mutate(Expected_pct = Expected / sum(Expected, na.rm = TRUE)) %>%
+      dplyr::summarise(Expected = dplyr::n()) %>%
+      dplyr::mutate(Expected_pct = Expected / base::sum(Expected, na.rm = TRUE)) %>%
       dplyr::arrange(feature)
 
     df.distribution.actual.categorical_ <- df.actual.categorical_ %>%
       dplyr::group_by(feature, value) %>%
-      dplyr::summarise(Actual = n()) %>%
-      dplyr::mutate(Actual_pct = Actual / sum(Actual, na.rm = TRUE)) %>%
+      dplyr::summarise(Actual = dplyr::n()) %>%
+      dplyr::mutate(Actual_pct = Actual / base::sum(Actual, na.rm = TRUE)) %>%
       dplyr::arrange(feature)
 
 
     df.distribution.categorical_ <- dplyr::full_join(df.distribution.expected.categorical_,
                                                      df.distribution.actual.categorical_,
                                                      by = c("feature", "value")) %>%
-      dplyr::mutate(Index = (Actual_pct - Expected_pct) * log(Actual_pct / Expected_pct),
+      dplyr::mutate(Index = (Actual_pct - Expected_pct) * base::log(Actual_pct / Expected_pct),
                     bin = value,
                     min = NaN,
                     max = NaN,
@@ -115,12 +140,18 @@ df_get_feature_distribution <- function(expected_, actual_, features_){
       dplyr::arrange(feature, bin)
   }
 
-  if(length(numericFeatures_) > 0 & length(categoricalFeatures_) > 0){
+  if(base::length(numericFeatures_) > 0 & base::length(categoricalFeatures_) > 0){
+
     df.distribution_ <- dplyr::bind_rows(df.distribution.numeric_, df.distribution.categorical_)
-  } else if (length(numericFeatures_) > 0){
+
+  } else if (base::length(numericFeatures_) > 0){
+
     df.distribution_ <- df.distribution.numeric_
-  } else if (length(categoricalFeatures_) > 0){
+
+  } else if (base::length(categoricalFeatures_) > 0){
+
     df.distribution_ <- df.distribution.categorical_
+
   }
 
   return(df.distribution_)

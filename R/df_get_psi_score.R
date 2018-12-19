@@ -15,12 +15,12 @@
 #' @export
 df_get_psi_score <- function(expected_, actual_, features_) {
 
-   feature_distribution_ <- df_get_feature_distribution(expected_, actual_, features_)
+  feature_distribution_ <- df_get_feature_distribution(expected_, actual_, features_)
 
-    psi_scores_ <- feature_distribution_ %>%
-        dplyr::group_by(feature) %>%
-        dplyr::summarise(PSI = sum(Index, na.rm = TRUE)) %>%
-        dplyr::arrange(feature)
+  psi_scores_ <- feature_distribution_ %>%
+    dplyr::group_by(feature) %>%
+    dplyr::summarise(PSI = base::sum(Index, na.rm = TRUE)) %>%
+    dplyr::arrange(feature)
 
-    return(psi_scores_)
+  return(psi_scores_)
 }
