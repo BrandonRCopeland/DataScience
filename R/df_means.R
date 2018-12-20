@@ -8,9 +8,9 @@ df_means <- function(df){
   df.means.temp <- df %>%
     dplyr::mutate_if(is.character, funs(as.factor)) %>%   ## Convert every variable to feature, so we can then...
     dplyr::mutate_if(is.factor, funs(as.integer)) %>%  ## convert the features to integers.)
-    dplyr::summarise_all(mean) %>%
+    dplyr::summarise_all(base::mean) %>%
     tidyr::gather(key = "Feature", value = "Mean") %>%
-    dplyr::mutate(Mean = round(Mean, 4))
+    dplyr::mutate(Mean = base::round(Mean, 4))
 
   return(df.means.temp)
 

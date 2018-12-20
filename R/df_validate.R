@@ -19,68 +19,74 @@ df_validate <- function(actual, expected, features, key, matchTestPct = 0.98, me
 
   #remove _new labels from the bridge view
   actual.temp <- actual %>%
-    dplyr::select(one_of(features)) %>%
-    dplyr::mutate_if(is.numeric, round, 2)
+    dplyr::select(dplyr::one_of(features)) %>%
+    dplyr::mutate_if(is.numeric, base::round, 2)
 
   expected.temp <- expected %>%
-    dplyr::select(one_of(features)) %>%
-    dplyr::mutate_if(is.numeric, round, 2)
+    dplyr::select(dplyr::one_of(features)) %>%
+    dplyr::mutate_if(is.numeric, base::round, 2)
 
   #Get mean differentials
-  df.means.expected.temp <- df_means(expected.temp %>% dplyr::select(-key))
-  df.means.actual.temp <- df_means(actual.temp %>% dplyr::select(-key))
+  df.means.expected.temp <- df_means(expected.temp %>%
+                                       dplyr::select(-key))
+
+  df.means.actual.temp <- df_means(actual.temp %>%
+                                     dplyr::select(-key))
 
   df.means.temp <- dplyr::left_join(df.means.expected.temp,
-                        df.means.actual.temp,
-                        by = "Feature",
-                        suffix = c(".expected", ".actual")) %>%
+                                    df.means.actual.temp,
+                                    by = "Feature",
+                                    suffix = c(".expected", ".actual")) %>%
     dplyr::rename(Expected_Mean = Mean.expected,
-           Actual_Mean = Mean.actual) %>%
+                  Actual_Mean = Mean.actual) %>%
     dplyr::mutate(Delta = Actual_Mean - Expected_Mean,
-           Delta_pct = Delta / Actual_Mean)
+                  Delta_pct = Delta / Actual_Mean)
 
   #Convert to long so we can do one calc for all features vs. separate
   df.expected.long.temp <- expected.temp %>%
     dplyr::mutate_all(funs(as.character)) %>%
     tidyr::gather(key = "Feature",
-           value = "Value", -key)
+                  value = "Value", -key)
 
   df.actual.long.temp <- actual.temp %>%
     dplyr::mutate_all(funs(as.character)) %>%
     tidyr::gather(key = "Feature",
-           value = "Value", -key)
+                  value = "Value", -key)
 
   #Join actual and expected and tally matches
   df.matches.subscriptions.temp <- dplyr::left_join(df.expected.long.temp, df.actual.long.temp,
-                                        by = c(key,"Feature"),
-                                        suffix = c(".expected", ".actual")) %>%
-    dplyr::mutate(IsMatch = ifelse(Value.expected == Value.actual,1,0),
-           IsHigher = ifelse(Value.expected < Value.actual,1,0),
-           IsLower = ifelse(Value.expected > Value.actual,1,0),
-           IsMissing = ifelse(is.na(Value.actual),1,0))
+                                                    by = c(key,"Feature"),
+                                                    suffix = c(".expected", ".actual")) %>%
+    dplyr::mutate(IsMatch = base::ifelse(Value.expected == Value.actual,1,0),
+                  IsHigher = base::ifelse(Value.expected < Value.actual,1,0),
+                  IsLower = base::ifelse(Value.expected > Value.actual,1,0),
+                  IsMissing = base::ifelse(is.na(Value.actual),1,0))
 
   df.matches.temp <- df.matches.subscriptions.temp %>%
     dplyr::group_by(Feature) %>%
-    dplyr::summarise(Total = n(),
-              Matches = sum(IsMatch, na.rm = TRUE),
-              Match_Pct = Matches / Total,
-              Higher = sum(IsHigher, na.rm = TRUE),
-              Higher_Pct = Higher / Total,
-              Lower = sum(IsLower, na.rm = TRUE),
-              Lower_Pct = Lower / Total,
-              Missing = sum(IsMissing, na.rm = TRUE),
-              Missing_Pct = Missing / Total)
+    dplyr::summarise(Total = dplyr::n(),
+                     Matches = base::sum(IsMatch, na.rm = TRUE),
+                     Match_Pct = Matches / Total,
+                     Higher = base::sum(IsHigher, na.rm = TRUE),
+                     Higher_Pct = Higher / Total,
+                     Lower = base::sum(IsLower, na.rm = TRUE),
+                     Lower_Pct = Lower / Total,
+                     Missing = base::sum(IsMissing, na.rm = TRUE),
+                     Missing_Pct = Missing / Total)
 
-  df.validation.temp <- dplyr::left_join(df.matches.temp, df.means.temp, by = "Feature") %>%
-    dplyr::mutate(Test1 = ifelse(Match_Pct >= matchTestPct, "PASS", "FAIL"),
-           Test2 = ifelse(abs(Delta_pct) <= meanTestPct, "PASS", "FAIL"),
-           Result = ifelse(Test1 == "PASS" & Test2 == "PASS", "PASS", "FAIL")) %>%
-    dplyr::arrange(desc(Match_Pct))
-  
+  df.validation.temp <- dplyr::left_join(df.matches.temp,
+                                         df.means.temp,
+                                         by = "Feature") %>%
+    dplyr::mutate(Test1 = base::ifelse(Match_Pct >= matchTestPct, "PASS", "FAIL"),
+                  Test2 = base::ifelse(base::abs(Delta_pct) <= meanTestPct, "PASS", "FAIL"),
+                  Result = base::ifelse(Test1 == "PASS" & Test2 == "PASS", "PASS", "FAIL")) %>%
+    dplyr::arrange(dplyr::desc(Match_Pct))
+
   df.psi.temp <- df_get_psi_score(actual, expected, features)
 
   df.validation.temp <- df.validation.temp %>%
-    dplyr::left_join(df.psi.temp, by = c("Feature" = "feature"))
+    dplyr::left_join(df.psi.temp,
+                     by = c("Feature" = "feature"))
 
   return(df.validation.temp)
 }
