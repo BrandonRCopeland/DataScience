@@ -154,7 +154,7 @@ df_get_feature_distribution <- function(expected_, actual_, features_){
 
   }
 
-  df.distribution_ <- df.distribution %>%
+  df.distribution_ <- df.distribution_ %>%
     dplyr::mutate(Expected = tidyr::replace_na(Expected, 0),
                   Expected_pct = tidyr::replace_na(Expected_pct, 0),
                   Actual = tidyr::replace_na(Actual, 0),
