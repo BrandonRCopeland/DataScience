@@ -9,6 +9,7 @@
 #'
 #' @param distributions Required: Distributions for the features.  Can be created via the df_model_monitoring_distributions function.
 #' @return A base R dataframe containing the feature, # of bins, Chi Squared Value, P-Value, Cramer's V, Result, and Magnitude.
+#' @export
 df_model_monitoring_summary <- function(distributions){
 
   monitoring_temp = distributions %>%
