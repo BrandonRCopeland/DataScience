@@ -19,14 +19,14 @@ df_model_monitoring_magnitude <- function(CramersVScore, DegreesOfFreedom){
     return(NA)
   }
 
-  if(DegreesOfFreedom <= 2){
+  if(DegreesOfFreedom <= 2L){
     small  = .1
     medium = .3
     large  = .5
   }else if(DegreesOfFreedom == 3){
     small  = .071
     medium = .212
-    large  = 354
+    large  = .354
   }else if(DegreesOfFreedom == 4){
     small  = .058
     medium = .173
