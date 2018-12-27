@@ -28,17 +28,17 @@ df_model_monitoring_summary <- function(distributions){
 
     if (numberOfBins - 1 > 0 ) {
 
-      df.temp = df.distributions %>%
+      distributions_temp = distributions %>%
         dplyr::filter(feature == !!feature)
 
-      cs_test = stats::chisq.test(df.temp$Actual, p = df.temp$Expected_pct, rescale.p = TRUE)
+      cs_test = stats::chisq.test(distributions_temp$Actual, p = distributions_temp$Expected_pct, rescale.p = TRUE)
 
       monitoring_temp[row, "x2"] = cs_test$statistic
       monitoring_temp[row, "dof"] = cs_test$parameter
       monitoring_temp[row, "p"] = cs_test$p.value
 
       ## You can calculate the below manually via this calc:  sqrt(cs_test$statistic / (n * cs_test$parameter))
-      monitoring_temp[row, "cramers_v"] = cramerVFit(x = df.temp$Actual, p = df.temp$Expected_pct)
+      monitoring_temp[row, "cramers_v"] = rcompanion::cramerVFit(x = distributions_temp$Actual, p = distributions_temp$Expected_pct)
     }
   }
 
