@@ -2,7 +2,7 @@
 #' Assess observed and expected feature distributions for drift.
 #'
 #' This function will take a distribution table of observed and expected features
-#' and perform a Chi Square Goodness of Fit test for all numeric and categorical
+#' and perform a Chi Squared Goodness of Fit test for all numeric and categorical
 #' features.  Furthermore, with will account for sample size and degrees of freedom
 #' by performing a subsequent Cramers V Goodness of Fit test.
 #'
