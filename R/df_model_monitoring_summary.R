@@ -19,7 +19,6 @@ df_model_monitoring_summary <- function(distributions){
                   dof = as.integer(NA),
                   p = as.double(NA),
                   cramers_v = as.double(NA),
-                  cramers_vm = as.double(NA),
                   magnitude = as.character(NA),
                   result = as.character(NA)) %>%
     dplyr::arrange(dplyr::desc(DataType), feature) %>%
@@ -39,8 +38,8 @@ df_model_monitoring_summary <- function(distributions){
       dof       = as.double(cs_test$parameter)
       pvalue    = as.double(cs_test$p.value)
       n         = sum(distributions_temp$Actual)
-      vm        = sqrt(x2 / (n * dof))
-      v         = as.double(rcompanion::cramerVFit(x = distributions_temp$Actual, p = distributions_temp$Expected_pct))
+      v         = sqrt(x2 / (n * dof))
+      #v         = as.double(rcompanion::cramerVFit(x = distributions_temp$Actual, p = distributions_temp$Expected_pct))
       magnitude = df_model_monitoring_magnitude(v, dof)
       result    = ifelse(pvalue > 0, "PASS",
                          ifelse(magnitude == "negligible",
@@ -51,14 +50,13 @@ df_model_monitoring_summary <- function(distributions){
       monitoring_temp[row, "dof"]       = dof
       monitoring_temp[row, "p"]         = pvalue
       monitoring_temp[row, "cramers_v"] = v
-      monitoring_temp[row, "cramers_vm"] = vm
       monitoring_temp[row, "magnitude"] = magnitude
       monitoring_temp[row, "result"]    = result
     }
   }
 
   output = monitoring_temp %>%
-    dplyr::select(feature, bins, x2, p, cramers_v, cramers_vm, result, magnitude) %>%
+    dplyr::select(feature, bins, x2, p, cramers_v, result, magnitude) %>%
     dplyr::arrange(result, feature)
 
   return(output)
