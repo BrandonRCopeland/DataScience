@@ -41,8 +41,8 @@ df_model_monitoring_summary <- function(distributions){
       v         = base::sqrt(x2 / (n * dof))
       #v         = as.double(rcompanion::cramerVFit(x = distributions_temp$Actual, p = distributions_temp$Expected_pct))
       magnitude = df_model_monitoring_magnitude(v, dof)
-      result    = ifelse(pvalue > 0, "PASS",
-                         ifelse(magnitude == "4. negligible",
+      result    = ifelse(pvalue > 0.05, "PASS",
+                         ifelse(magnitude %in% c("4. negligible", "3. small"),
                                 "PASS",
                                 "FAIL"))
 
