@@ -58,12 +58,12 @@ df_model_monitoring_magnitude <- function(CramersVScore, DegreesOfFreedom){
   }
 
   if(CramersVScore < small){
-    return("negligible")
+    return("4.negligible")
   }else if(CramersVScore < medium){
-    return("small")
+    return("3. small")
   }else if(CramersVScore < large){
-    return("moderate")
+    return("2. moderate")
   }else if(CramersVScore >= large){
-    return("large")
+    return("1. large")
   }
 }
